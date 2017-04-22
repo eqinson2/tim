@@ -15,15 +15,7 @@ public class PojoGenUtil {
 
     public static Class<?> generatePojo(String className, Map<String, Class<?>> properties) throws
         NotFoundException, CannotCompileException {
-
-        ClassPool pool = ClassPool.getDefault();
-        CtClass cc;
-        if (pool.getOrNull(className) == null)
-            cc = pool.makeClass(className);
-        else
-            throw new RuntimeException("Unable to reload same class on the fly.");
-
-        // add this to define an interface to implement
+        CtClass cc = makeClass(className);
         cc.addInterface(resolveCtClass(Serializable.class));
         properties.forEach((k, v) -> {
             try {
@@ -36,15 +28,12 @@ public class PojoGenUtil {
             }
         });
 
-        return (Class<?>) cc.toClass();
+        return (Class<?>) cc.toClass(new Loader());
     }
 
     static Class<?> generateListPojo(String className, Map<String, Class<?>> properties) throws
         NotFoundException, CannotCompileException {
-        ClassPool pool = ClassPool.getDefault();
-        final CtClass cc = pool.makeClass(className);
-
-        // add this to define an interface to implement
+        CtClass cc = makeClass(className);
         cc.addInterface(resolveCtClass(Serializable.class));
         properties.forEach((k, v) -> {
             try {
@@ -56,7 +45,8 @@ public class PojoGenUtil {
             }
         });
 
-        return (Class<?>) cc.toClass();
+        //make sure share same classloeader with generatePojo
+        return (Class<?>) cc.toClass(Thread.currentThread().getContextClassLoader());
     }
 
     private static CtMethod generatePlainGetter(CtClass declaringClass, String fieldName, Class<?> fieldClass)
@@ -88,5 +78,16 @@ public class PojoGenUtil {
     private static CtClass resolveCtClass(Class<?> clazz) throws NotFoundException {
         ClassPool pool = ClassPool.getDefault();
         return pool.get(clazz.getName());
+    }
+
+    private static CtClass makeClass(String className) throws NotFoundException, CannotCompileException {
+        ClassPool pool = ClassPool.getDefault();
+        if (pool.getOrNull(className) == null) {
+            return pool.makeClass(className);
+        } else {
+            CtClass ccOld = pool.get(className);
+            ccOld.defrost();
+            return pool.makeClass(className);
+        }
     }
 }

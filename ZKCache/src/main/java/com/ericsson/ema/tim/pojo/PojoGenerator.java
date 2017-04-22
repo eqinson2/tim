@@ -25,6 +25,7 @@ public class PojoGenerator {
     }
 
     private PojoGenerator() {
+        throw new UnsupportedOperationException("PojoGenerator is utility class.");
     }
 
     private static void generateTupleClz(Table table) {
@@ -38,12 +39,14 @@ public class PojoGenerator {
             props.forEach((k, v) -> LOGGER.debug("name: {}, type: {}", k, v.getName()));
 
         String classToGen = pojoPkg + "." + table.getName() + "Data";
+        Class<?> clz;
         try {
-            PojoGenUtil.generatePojo(classToGen, props);
+            clz = PojoGenUtil.generatePojo(classToGen, props);
         } catch (NotFoundException | CannotCompileException e) {
             LOGGER.error(e.getMessage());
             throw new RuntimeException(e);
         }
+        Thread.currentThread().setContextClassLoader(clz.getClassLoader());
     }
 
     public static void generateTableClz(Table table) {
@@ -59,6 +62,5 @@ public class PojoGenerator {
             LOGGER.error(e.getMessage());
             throw new RuntimeException(e);
         }
-        Thread.currentThread().setContextClassLoader(clz.getClassLoader());
     }
 }

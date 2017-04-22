@@ -13,12 +13,14 @@ public class JavaBeanReflectionProxy {
     private final static String TUPLENAME = "records";
     private final static Logger LOGGER = LoggerFactory.getLogger(JavaBeanReflectionProxy.class);
 
-    private Object instance;
-    private Class<?> tupleListType;
+    private final Object instance;
+    private final Class<?> tupleListType;
 
     public JavaBeanReflectionProxy(Object instance) throws ClassNotFoundException {
         this.instance = instance;
-        this.tupleListType = Class.forName(instance.getClass().getName() + "Data");
+        String tupleClassName = instance.getClass().getName() + "Data";
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        this.tupleListType = cl != null ? cl.loadClass(tupleClassName) : Class.forName(tupleClassName);
 //        tupleListType = getTupleListTypeInfo().orElseGet(null);
     }
 

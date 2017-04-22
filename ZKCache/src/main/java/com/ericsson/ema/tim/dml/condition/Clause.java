@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 import static com.ericsson.ema.tim.reflection.MethodInvocationCache.AccessType.GET;
 
 public abstract class Clause {
-    protected final String field;
+    final String field;
     final String valueToComp;
 
     private Select parent;
