@@ -7,90 +7,154 @@ destroy:
     zkMonitor.stop();
     zkConnectionManager.destroy();
 	
-internal mechanism
+internal mechanism:
 	1. load data in json format from znode for each table if there is configuration change triggered from GUI (the callback is implemented through zookeeper watcher mechanism, referring https://zookeeper.apache.org/doc/r3.4.5/zookeeperProgrammers.html for details), or the server is just started up, or the zookeeper client is reconnected to server.
 	2. if table metadata (data inside Header tag) has not changed, then directly jump to step 5, otherwise go to step 3.
 	3. parse json formatted data and build it as internal data model.
-	4. generate POJO bytecode on the fly with opensource tool(javaassit) based on the internal data model. if the operation is to update the existing data model(e.g. change table schema), the bytecode will be overwritten.
+	4. generate POJO byte codes on the fly with opensource tool(javaassit) based on the internal data model. if the operation is to update the existing data model(e.g. change table schema), the bytecode will be overwritten.
 	5. populate the actual data(data inside Content tag) into POJO generated in previous steps using reflection.
 	
 supported clauses:
-eq: test if two value equals
-uneq: test if two value not equals
-like: test if left field contains right oper, only support string type
-unlike: test if left field not contains right oper, only support string type
-gt: test if left field > right oper, only support int type
-lt: test if left field < right oper, only support int type
-range:  test if left field in range of [from, to), only support int type
-orderby: order by given field, either asc(default) or desc and support cascading.
-limit: only fetch first n limit element
-skip: skip first n element
+    eq: test if two value equals
+    uneq: test if two value not equals
+    like: test if left field contains right oper, only support string type
+    unlike: test if left field not contains right oper, only support string type
+    gt: test if left field > right oper, only support int type
+    lt: test if left field < right oper, only support int type
+    range:  test if left field in range of [from, to), only support int type
+    orderBy: order by given field, either asc(default) or desc and support cascading
+    groupBy: group by give field, and not support cascading and field select
+    limit: only select first n limit element
+    skip: skip first n element
 
-select example:
-LOGGER.info("=====================select some data for testing eq=====================");
+supported collect operation:
+    List<Object> collect();
+    List<List<Object>> collectBySelectFields();
+    Map<Object, List<Object>> collectByGroup();
+
+API usage example:
+    @Test
+    public void testEq() {
+        LOGGER.info("=====================select some data for testing eq=====================");
         List<Object> result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age",
-            "1")).execute();
-        System.out.println(result.size());
+            "1")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
 
         result = select().from(tableName).where(eq("name", "eqinson2")).where(eq("age", "6"))
-            .execute();
-        System.out.println(result.size());
-
-        result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age", "4")).where(eq
-            ("job", "manager")).execute();
-        System.out.println(result.size());
-
-        result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age", "4")).where(eq
-            ("job", "manager")).orderby("name", "asc").orderby("job", "desc").execute();
+            .collect();
         result.forEach(System.out::println);
+        System.out.println();
 
+        result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age", "4")).where(eq
+            ("job", "manager")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
+        result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age", "4")).where(eq
+            ("job", "manager")).orderBy("name", "asc").orderBy("job", "desc").collect();
+        result.forEach(System.out::println);
+        System.out.println();
+    }
+
+    @Test
+    public void testUnEq() {
         LOGGER.info("=====================select some data for testing uneq=====================");
-        result = select().from(tableName).where(uneq("name", "eqinson1")).where(eq("age",
-            "1")).execute();
-        System.out.println(result.size());
+        List<Object> result = select().from(tableName).where(uneq("name", "eqinson1")).where(eq("age",
+            "1")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
 
         result = select().from(tableName).where(eq("name", "eqinson2")).where(uneq("age", "6"))
-            .execute();
-        System.out.println(result.size());
+            .collect();
+        result.forEach(System.out::println);
+        System.out.println();
 
         List<List<Object>> sliceRes = select("name", "age", "job").from(tableName).
             where(uneq("name", "eqinson1"))
-            .orderby("name", "asc").orderby("age", "desc").orderby("job")
-            .executeWithSelectFields();
+            .orderBy("name", "asc").orderBy("age", "desc").orderBy("job")
+            .collectBySelectFields();
         printResult(sliceRes);
+        System.out.println();
+    }
 
+    @Test
+    public void testLike() {
         LOGGER.info("=====================select some data for testing like/unlike=====================");
-        result = select().from(tableName).where(like("name", "eqinson")).where(eq("age",
-            "1")).execute();
-        System.out.println(result.size());
+        List<Object> result = select().from(tableName).where(like("name", "eqinson")).where(eq("age",
+            "1")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
 
         result = select().from(tableName).where(unlike("name", "eqinson")).where(uneq("age", "6"))
-            .execute();
-        System.out.println(result.size());
+            .collect();
+        result.forEach(System.out::println);
+        System.out.println();
 
-        sliceRes = select("name", "age", "job").from(tableName).
+        List<List<Object>> sliceRes = select("name", "age", "job").from(tableName).
             where(like("name", "eqinson")).where(unlike("job", "engineer"))
-            .orderby("name", "asc").orderby("age", "desc").orderby("job")
-            .executeWithSelectFields();
+            .orderBy("name", "asc").orderBy("age", "desc").orderBy("job")
+            .collectBySelectFields();
         printResult(sliceRes);
+    }
 
+    @Test
+    public void testGtLt() {
         LOGGER.info("=====================select some data for testing gt/lt=====================");
-        sliceRes = select("name", "age", "job").from(tableName).
+        List<List<Object>> sliceRes = select("name", "age", "job").from(tableName).
             where(like("name", "eqinson")).where(unlike("job", "engineer"))
             .where(gt("age", 3)).where(lt("age", 6))
-            .orderby("name", "asc").orderby("age", "desc").orderby("job").limit(2)
-            .executeWithSelectFields();
+            .orderBy("name", "asc").orderBy("age", "desc").orderBy("job").limit(2)
+            .collectBySelectFields();
         printResult(sliceRes);
+        System.out.println();
+    }
 
+    @Test
+    public void testRange() {
         LOGGER.info("=====================select some data for testing range=====================");
-        sliceRes = select("name", "age", "job").from(tableName).
+        List<List<Object>> sliceRes = select("name", "age", "job").from(tableName).
             where(like("name", "eqinson")).where(unlike("job", "engineer"))
             .where(range("age", 4, 6))
-            .orderby("name", "asc").orderby("age", "desc").orderby("job").limit(2)
-            .executeWithSelectFields();
+            .orderBy("name", "asc").orderBy("age", "desc").orderBy("job").limit(2)
+            .collectBySelectFields();
         printResult(sliceRes);
-		
-		private void printResult(List<List<Object>> sliceRes) {
+        System.out.println();
+    }
+
+    @Test
+    public void testCount() {
+        LOGGER.info("=====================select some data for testing count/exists=====================");
+        TestCase.assertEquals(select("name", "age", "job").from(tableName).
+            where(like("name", "eqinson")).where(unlike("job", "engineer"))
+            .where(range("age", 4, 6))
+            .count(), 3);
+
+        TestCase.assertTrue(select("name", "age", "job").from(tableName).
+            where(like("name", "eqinson")).where(unlike("job", "engineer"))
+            .where(range("age", 4, 6))
+            .exists());
+    }
+
+    @Test
+    public void doGroupBy() throws Exception {
+        LOGGER.info("=====================select some data for testing groupby=====================");
+        Map<Object, List<Object>> res = select().from(tableName).
+            where(like("name", "eqinson")).where(like("job", "engineer"))
+            .where(range("age", 1, 10)).groupBy("name").collectByGroup();
+        printResultGroup(res);
+    }
+
+    @Test(expected = DmlBadSyntaxException.class)
+    public void doGroupByException() {
+        LOGGER.info("=====================select some data for testing groupby with " +
+            "DmlBadSyntaxException=====================");
+        select().from(tableName).
+            where(like("name", "eqinson")).where(like("job", "engineer"))
+            .where(range("age", 1, 6)).groupBy("name").groupBy("age").collectByGroup();
+    }
+
+    private void printResult(List<List<Object>> sliceRes) {
         for (Object eachRow : sliceRes) {
             if (eachRow instanceof List<?>) {
                 List<Object> row = (List<Object>) eachRow;
@@ -98,4 +162,14 @@ LOGGER.info("=====================select some data for testing eq===============
             }
             System.out.println();
         }
+    }
+
+    private void printResultGroup(Map<Object, List<Object>> mapRes) {
+        mapRes.forEach((k, v) -> {
+            if (v != null) {
+                List<Object> row = (List<Object>) v;
+                row.forEach(r -> System.out.print(r + "   "));
+            }
+            System.out.println();
+        });
     }

@@ -91,6 +91,9 @@ public class Select implements Selector {
 
     @Override
     public Selector groupBy(String field) {
+        if (groupBy != null)
+            throw new DmlBadSyntaxException("Error: only support one groupby");
+        
         GroupBy g = GroupBy.groupBy(field);
         this.groupBy = g;
         g.setSelector(this);

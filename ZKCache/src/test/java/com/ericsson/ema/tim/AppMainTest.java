@@ -1,13 +1,14 @@
 package com.ericsson.ema.tim;
 
+import com.ericsson.ema.tim.dml.DmlBadSyntaxException;
 import com.ericsson.ema.tim.utils.FileUtils;
 import com.ericsson.ema.tim.zookeeper.ZKMonitor;
+import junit.framework.TestCase;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -49,7 +50,6 @@ public class AppMainTest {
     public static void init() throws IOException, URISyntaxException {
         URL url = Thread.currentThread().getContextClassLoader().getResource(testFile);
         if (url != null) {
-            File file = new File(url.getPath());
             LOGGER.info("=====================load json: {}=====================", testFile);
             ZKMonitor zm = new ZKMonitor(null);
             zm.doLoad(tableName, FileUtils.readFile(Paths.get(url.toURI())));
@@ -148,12 +148,12 @@ public class AppMainTest {
     @Test
     public void testCount() {
         LOGGER.info("=====================select some data for testing count/exists=====================");
-        System.out.println(select("name", "age", "job").from(tableName).
+        TestCase.assertEquals(select("name", "age", "job").from(tableName).
             where(like("name", "eqinson")).where(unlike("job", "engineer"))
             .where(range("age", 4, 6))
-            .count());
+            .count(), 3);
 
-        System.out.println(select("name", "age", "job").from(tableName).
+        TestCase.assertTrue(select("name", "age", "job").from(tableName).
             where(like("name", "eqinson")).where(unlike("job", "engineer"))
             .where(range("age", 4, 6))
             .exists());
@@ -164,8 +164,17 @@ public class AppMainTest {
         LOGGER.info("=====================select some data for testing groupby=====================");
         Map<Object, List<Object>> res = select().from(tableName).
             where(like("name", "eqinson")).where(like("job", "engineer"))
-            .where(range("age", 1, 6)).groupBy("name").collectByGroup();
+            .where(range("age", 1, 10)).groupBy("name").collectByGroup();
         printResultGroup(res);
+    }
+
+    @Test(expected = DmlBadSyntaxException.class)
+    public void doGroupByException() {
+        LOGGER.info("=====================select some data for testing groupby with " +
+            "DmlBadSyntaxException=====================");
+        select().from(tableName).
+            where(like("name", "eqinson")).where(like("job", "engineer"))
+            .where(range("age", 1, 6)).groupBy("name").groupBy("age").collectByGroup();
     }
 
     private void printResult(List<List<Object>> sliceRes) {
