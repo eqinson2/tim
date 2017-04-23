@@ -1,0 +1,39 @@
+package com.ericsson.ema.tim.dml.predicate;
+
+import com.ericsson.ema.tim.dml.DataTypes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+
+/**
+ * Created by eqinson on 2017/4/23.
+ */
+public class BiggerThan extends AbstractPredicate implements Predicate {
+    private final static Logger LOGGER = LoggerFactory.getLogger(BiggerThan.class);
+
+    private BiggerThan(String field, int value) {
+        super(field, value);
+    }
+
+    public static BiggerThan gt(String field, int value) {
+        return new BiggerThan(field, value);
+    }
+
+    @Override
+    public boolean eval(Object tuple) {
+        if (this.valueToComp == null)
+            return false;
+
+        Object fieldVal = getFiledValFromTupleByName(tuple);
+        Map<String, String> metadata = getSelector().getContext().getTableMetadata();
+        String fieldType = metadata.get(field);
+        switch (fieldType) {
+            case DataTypes.Int:
+                return Integer.compare((Integer) fieldVal, (Integer) this.valueToComp) > 0;
+            default:
+                LOGGER.error("must be int type in BiggerThan: {},{}", field, fieldType);
+                throw new RuntimeException("must be int type in BiggerThan: " + field + "," + fieldType);
+        }
+    }
+}

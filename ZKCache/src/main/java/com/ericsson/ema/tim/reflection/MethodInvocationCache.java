@@ -42,6 +42,7 @@ public class MethodInvocationCache {
                         cached = lookup(clz, field);
                     } catch (IntrospectionException e) {
                         LOGGER.error(e.getMessage());
+                        throw new RuntimeException(e);
                     }
                     store.put(key, cached);
                 }

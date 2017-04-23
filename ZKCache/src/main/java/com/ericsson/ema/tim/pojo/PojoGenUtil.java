@@ -19,7 +19,9 @@ public class PojoGenUtil {
         cc.addInterface(resolveCtClass(Serializable.class));
         properties.forEach((k, v) -> {
             try {
-                cc.addField(new CtField(resolveCtClass(v), k, cc));
+                CtField field = new CtField(resolveCtClass(v), k, cc);
+                field.setModifiers(Modifier.PRIVATE);
+                cc.addField(field);
                 cc.addMethod(generatePlainGetter(cc, k, v));
                 cc.addMethod(generateSetter(cc, k, v));
             } catch (NotFoundException | CannotCompileException e) {
@@ -37,7 +39,9 @@ public class PojoGenUtil {
         cc.addInterface(resolveCtClass(Serializable.class));
         properties.forEach((k, v) -> {
             try {
-                cc.addField(new CtField(resolveCtClass(v), k, cc));
+                CtField field = new CtField(resolveCtClass(v), k, cc);
+                field.setModifiers(Modifier.PRIVATE);
+                cc.addField(field);
                 cc.addMethod(generateListGetter(cc, k, v));
             } catch (NotFoundException | CannotCompileException e) {
                 LOGGER.error(e.getMessage());

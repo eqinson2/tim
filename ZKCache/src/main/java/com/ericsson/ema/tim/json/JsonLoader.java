@@ -1,7 +1,5 @@
 package com.ericsson.ema.tim.json;
 
-import com.ericsson.ema.tim.json.model.FieldInfo;
-import com.ericsson.ema.tim.json.model.TypeInfo;
 import com.ericsson.ema.tim.utils.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -26,10 +24,6 @@ public class JsonLoader {
     private final Map<String, String> tableMetadata = new LinkedHashMap<>();
     private final List<List<FieldInfo>> tupleList = new ArrayList<>();
     private String tableName;
-
-    public JsonLoader() {
-        this.tableName = "";
-    }
 
     public JsonLoader(String tableName) {
         this.tableName = tableName;

@@ -1,4 +1,4 @@
-package com.ericsson.ema.tim.dml.condition;
+package com.ericsson.ema.tim.dml.predicate;
 
 import com.ericsson.ema.tim.dml.Select;
 
@@ -7,34 +7,32 @@ import java.lang.reflect.Method;
 
 import static com.ericsson.ema.tim.reflection.MethodInvocationCache.AccessType.GET;
 
-public abstract class Clause {
+public abstract class AbstractPredicate {
     final String field;
-    final String valueToComp;
+    final Object valueToComp;
 
-    private Select parent;
+    private Select selector;
 
-    Clause(String field, String value) {
+    AbstractPredicate(String field, Object value) {
         this.field = field;
         this.valueToComp = value;
     }
 
-    Select getParent() {
-        return parent;
+    Select getSelector() {
+        return selector;
     }
 
-    public void setParent(Select parent) {
-        this.parent = parent;
+    public void setSelector(Select selector) {
+        this.selector = selector;
     }
 
     Object getFiledValFromTupleByName(Object tuple) {
-        Object fieldVal;
-        Method getter = getParent().getMethodInvocationCache().get(tuple.getClass(), field, GET);
+        Method getter = getSelector().getMethodInvocationCache().get(tuple.getClass(), field, GET);
         try {
-            fieldVal = getter.invoke(tuple);
+            return getter.invoke(tuple);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e.getMessage());//should never happen
         }
-        return fieldVal;
     }
 
     abstract public boolean eval(Object tuple);

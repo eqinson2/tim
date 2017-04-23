@@ -1,7 +1,8 @@
 package com.ericsson.ema.tim.reflection;
 
+import com.ericsson.ema.tim.dml.DataTypes;
 import com.ericsson.ema.tim.json.JsonLoader;
-import com.ericsson.ema.tim.json.model.FieldInfo;
+import com.ericsson.ema.tim.json.FieldInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,10 +34,10 @@ public class TabDataLoader {
     private static Object realFieldVal(FieldInfo field) {
         Object value = null;
         switch (field.getFieldType()) {
-            case "string":
+            case DataTypes.String:
                 value = field.getFieldValue();
                 break;
-            case "int":
+            case DataTypes.Int:
                 value = Integer.valueOf(field.getFieldValue());
                 break;
             default:
@@ -46,8 +47,7 @@ public class TabDataLoader {
     }
 
     public Object loadData() throws ClassNotFoundException, IllegalAccessException,
-        InstantiationException,
-        InvocationTargetException {
+        InstantiationException, InvocationTargetException {
         LOGGER.info("=====================reflect class: {}=====================", classToLoad);
         Class<?> clz = tab2ClzMap.lookup(jloader.getTableName()).orElse(Thread.currentThread()
             .getContextClassLoader().loadClass(classToLoad));

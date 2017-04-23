@@ -19,6 +19,7 @@ public class JavaBeanReflectionProxy {
     public JavaBeanReflectionProxy(Object instance) throws ClassNotFoundException {
         this.instance = instance;
         String tupleClassName = instance.getClass().getName() + "Data";
+        //must use same classloader as PojoGen
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         this.tupleListType = cl != null ? cl.loadClass(tupleClassName) : Class.forName(tupleClassName);
 //        tupleListType = getTupleListTypeInfo().orElseGet(null);

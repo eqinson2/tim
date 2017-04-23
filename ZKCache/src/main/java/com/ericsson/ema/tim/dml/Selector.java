@@ -1,6 +1,6 @@
 package com.ericsson.ema.tim.dml;
 
-import com.ericsson.ema.tim.dml.condition.Clause;
+import com.ericsson.ema.tim.dml.predicate.Predicate;
 
 import java.util.List;
 
@@ -10,7 +10,15 @@ import java.util.List;
 public interface Selector {
     Selector from(String tab);
 
-    Selector where(Clause clause);
+    Selector where(Predicate predicate);
+
+    Selector orderby(String field, String asc);
+
+    Selector orderby(String field);
+
+    Selector limit(int limit);
+
+    Selector skip(int skip);
 
     List<Object> execute();
 

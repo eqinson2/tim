@@ -1,15 +1,15 @@
 package com.ericsson.ema.tim.dml;
 
-import com.ericsson.ema.tim.dml.condition.Clause;
+import com.ericsson.ema.tim.dml.order.OrderBy;
+import com.ericsson.ema.tim.dml.predicate.AbstractPredicate;
+import com.ericsson.ema.tim.dml.predicate.Predicate;
 import com.ericsson.ema.tim.reflection.MethodInvocationCache;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.ericsson.ema.tim.dml.TableInfoMap.tableInfoMap;
 import static com.ericsson.ema.tim.lock.ZKCacheRWLockMap.zkCacheRWLock;
@@ -18,8 +18,13 @@ import static com.ericsson.ema.tim.reflection.Tab2MethodInvocationCacheMap.tab2M
 
 public class Select implements Selector {
     private final static String TUPLE_FIELD = "records";
-    private final List<Clause> clauses = new ArrayList<>();
+
     private final List<String> selectedFields;
+    private final List<Predicate> predicates = new ArrayList<>();
+    private final List<OrderBy> orderbys = new ArrayList<>();
+    private int limit = -1;
+    private int skip = -1;
+
     private String table;
     private TableInfoContext context;
     private List<Object> records;
@@ -41,6 +46,10 @@ public class Select implements Selector {
         return new Select(fields);
     }
 
+    public List<String> getSelectedFields() {
+        return Collections.unmodifiableList(selectedFields);
+    }
+
     public MethodInvocationCache getMethodInvocationCache() {
         return methodInvocationCache;
     }
@@ -56,9 +65,39 @@ public class Select implements Selector {
     }
 
     @Override
-    public Selector where(Clause clause) {
-        this.clauses.add(clause);
-        clause.setParent(this);
+    public Selector where(Predicate predicate) {
+        this.predicates.add(predicate);
+        ((AbstractPredicate) predicate).setSelector(this);
+        return this;
+    }
+
+    @Override
+    public Selector orderby(String field, String asc) {
+        OrderBy o = OrderBy.orderby(field, asc);
+        this.orderbys.add(o);
+        o.setSelector(this);
+        return this;
+    }
+
+    @Override
+    public Selector orderby(String field) {
+        OrderBy o = OrderBy.orderby(field);
+        this.orderbys.add(o);
+        o.setSelector(this);
+        return this;
+    }
+
+    @Override
+    public Selector limit(int limit) {
+        if (limit > 0)
+            this.limit = limit;
+        return this;
+    }
+
+    @Override
+    public Selector skip(int skip) {
+        if (skip > 0)
+            this.skip = skip;
         return this;
     }
 
@@ -84,13 +123,28 @@ public class Select implements Selector {
         this.records = (List<Object>) tupleField;
     }
 
+    /**
+     * rwlock table when internalExecute
+     *
+     * @return List of tuple
+     */
     private List<Object> internalExecute() {
         zkCacheRWLock.readLockTable(table);
         try {
             initExecuteContext();
-            return records.stream().filter(
-                r -> clauses.stream().map(c -> c.eval(r)).reduce(true, Boolean::logicalAnd))
-                .collect(Collectors.toList());
+            Stream<Object> stream = records.stream().filter(
+                r -> predicates.stream().map(c -> c.eval(r)).reduce(true, Boolean::logicalAnd));
+            Optional<Comparator<Object>> c = orderbys.stream().map(OrderBy::comparing).reduce(Comparator::thenComparing);
+            if (c.isPresent()) {
+                stream = stream.sorted(c.get());
+            }
+            if (skip > 0) {
+                stream = stream.skip(skip);
+            }
+            if (limit > 0) {
+                stream = stream.limit(limit);
+            }
+            return stream.collect(Collectors.toList());
         } finally {
             zkCacheRWLock.readUnLockTable(table);
         }
