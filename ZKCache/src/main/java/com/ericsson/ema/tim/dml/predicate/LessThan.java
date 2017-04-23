@@ -1,6 +1,7 @@
 package com.ericsson.ema.tim.dml.predicate;
 
 import com.ericsson.ema.tim.dml.DataTypes;
+import com.ericsson.ema.tim.dml.DmlBadSyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,7 @@ public class LessThan extends AbstractPredicate implements Predicate {
                 return Integer.compare((Integer) fieldVal, (Integer) this.valueToComp) < 0;
             default:
                 LOGGER.error("must be int type in LessThan: {},{}", field, fieldType);
-                throw new RuntimeException("must be int type in LessThan: " + field + "," + fieldType);
+                throw new DmlBadSyntaxException("must be int type in LessThan: " + field + "," + fieldType);
         }
     }
 }

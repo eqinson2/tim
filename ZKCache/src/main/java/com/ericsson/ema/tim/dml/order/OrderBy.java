@@ -1,28 +1,23 @@
 package com.ericsson.ema.tim.dml.order;
 
 import com.ericsson.ema.tim.dml.DataTypes;
-import com.ericsson.ema.tim.dml.Select;
+import com.ericsson.ema.tim.dml.DmlBadSyntaxException;
+import com.ericsson.ema.tim.dml.SelectClause;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.ericsson.ema.tim.reflection.MethodInvocationCache.AccessType.GET;
-
 /**
  * Created by eqinson on 2017/4/23.
  */
-public class OrderBy {
+public class OrderBy extends SelectClause {
     private final static Logger LOGGER = LoggerFactory.getLogger(OrderBy.class);
 
     private final String field;
     private final boolean reversed;
-
-    private Select selector;
 
     private OrderBy(String field, boolean reversed) {
         this.field = field;
@@ -34,15 +29,11 @@ public class OrderBy {
             return new OrderBy(field, true);
         else if (asc.toUpperCase().equals("ASC"))
             return new OrderBy(field, false);
-        else throw new IllegalArgumentException("Error: orderby must be either asc or desc");
+        else throw new DmlBadSyntaxException("Error: orderBy must be either asc or desc");
     }
 
     public static OrderBy orderby(String field) {
         return new OrderBy(field, false);
-    }
-
-    public void setSelector(Select selector) {
-        this.selector = selector;
     }
 
     public String getField() {
@@ -50,11 +41,11 @@ public class OrderBy {
     }
 
     public Comparator<Object> comparing() {
-        if (!selector.getSelectedFields().isEmpty() && !selector.getSelectedFields().contains(field))
+        if (!getSelector().getSelectedFields().isEmpty() && !getSelector().getSelectedFields().contains(field))
             throw new IllegalArgumentException(String.format("Error: order by parameter %s not in selected field %s",
-                field, selector.getSelectedFields().stream().collect(Collectors.joining(",", "{", "}"))));
+                field, getSelector().getSelectedFields().stream().collect(Collectors.joining(",", "{", "}"))));
 
-        Map<String, String> metadata = selector.getContext().getTableMetadata();
+        Map<String, String> metadata = getSelector().getContext().getTableMetadata();
         String fieldType = metadata.get(field);
         switch (fieldType) {
             case DataTypes.String:
@@ -71,16 +62,7 @@ public class OrderBy {
                 };
             default:
                 LOGGER.error("unsupported data type: {},{}", field, fieldType);
-                throw new RuntimeException("unsupported data type: " + field + "," + fieldType);
-        }
-    }
-
-    private Object getFiledValFromTupleByName(Object tuple) {
-        Method getter = selector.getMethodInvocationCache().get(tuple.getClass(), field, GET);
-        try {
-            return getter.invoke(tuple);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e.getMessage());//should never happen
+                throw new DmlBadSyntaxException("Error: unsupported data type: " + field + "," + fieldType);
         }
     }
 }

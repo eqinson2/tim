@@ -5,7 +5,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by eqinson on 2017/4/21.
@@ -29,6 +31,7 @@ public class PojoGenUtil {
                 throw new RuntimeException(e);
             }
         });
+        cc.addMethod(generateToString(cc));
 
         return (Class<?>) cc.toClass(new Loader());
     }
@@ -76,6 +79,15 @@ public class PojoGenUtil {
         String sb = String.format("public void %s( %s %s) { this.%s = %s; }", setterName, fieldClass.getName(), fieldName,
             fieldName, fieldName);
         LOGGER.debug("generateSetter:{}", sb);
+        return CtMethod.make(sb, declaringClass);
+    }
+
+    private static CtMethod generateToString(CtClass declaringClass)
+        throws CannotCompileException {
+        String toStringBody = Arrays.stream(declaringClass.getDeclaredFields()).map(f -> "\"{\"+String.valueOf(" + f
+            .getName() + ")+\"}\"").collect(Collectors.joining("+", "return ", ";"));
+        String sb = String.format("public String toString() { %s }", toStringBody);
+        LOGGER.debug("generateToString:{}", sb);
         return CtMethod.make(sb, declaringClass);
     }
 

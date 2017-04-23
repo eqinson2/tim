@@ -1,6 +1,7 @@
 package com.ericsson.ema.tim.dml.predicate;
 
 import com.ericsson.ema.tim.dml.DataTypes;
+import com.ericsson.ema.tim.dml.DmlBadSyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +17,8 @@ public class Range extends AbstractPredicate implements Predicate {
 
     private Range(String field, int from, int to) {
         super(field, null);
+        if (from > to)
+            throw new DmlBadSyntaxException("from must be lte to");
         this.from = from;
         this.to = to;
     }
@@ -34,7 +37,7 @@ public class Range extends AbstractPredicate implements Predicate {
                 return Integer.compare((Integer) fieldVal, from) >= 0 && Integer.compare((Integer) fieldVal, to) < 0;
             default:
                 LOGGER.error("must be int type in BiggerThan: {},{}", field, fieldType);
-                throw new RuntimeException("must be int type in BiggerThan: " + field + "," + fieldType);
+                throw new DmlBadSyntaxException("must be int type in BiggerThan: " + field + "," + fieldType);
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.ericsson.ema.tim.dml.predicate;
 
 import com.ericsson.ema.tim.dml.DataTypes;
+import com.ericsson.ema.tim.dml.DmlBadSyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ public class UnEq extends AbstractPredicate implements Predicate {
                 return !(Integer.valueOf((String) this.valueToComp)).equals(fieldVal);
             default:
                 LOGGER.error("unsupported data type: {},{}", field, fieldType);
-                throw new RuntimeException("unsupported data type: " + field + "," + fieldType);
+                throw new DmlBadSyntaxException("unsupported data type: " + field + "," + fieldType);
         }
     }
 }

@@ -24,8 +24,8 @@ public class FileUtils {
         return url != null ? Optional.of(Paths.get(url.toURI())) : Optional.empty();
     }
 
-    public static String readFile(String path) throws IOException {
-        final byte[] encoded = Files.readAllBytes(Paths.get(path));
+    public static String readFile(Path path) throws IOException {
+        final byte[] encoded = Files.readAllBytes(path);
         return new String(encoded, Charset.defaultCharset());
     }
 
@@ -50,20 +50,20 @@ public class FileUtils {
         Path rootPath = Paths.get(path);
         if (Files.exists(rootPath) && Files.isDirectory(rootPath))
             Files.walk(rootPath)
-                    .sorted(Comparator.reverseOrder())
-                    .filter(p -> !p.toFile().getName().equals(path))//skip root dir
-                    .peek(f -> LOGGER.debug("delete file {}", f))
-                    .forEach(p -> {
-                        try {
-                            Files.delete(p);
-                        } catch (NoSuchFileException ex) {
-                            LOGGER.error("{}: no such" + " file or directory", p);
-                        } catch (DirectoryNotEmptyException ex) {
-                            LOGGER.error("{} not empty", p);
-                        } catch (IOException ex) {
-                            LOGGER.error(ex.getMessage());
-                        }
-                    });
+                .sorted(Comparator.reverseOrder())
+                .filter(p -> !p.toFile().getName().equals(path))//skip root dir
+                .peek(f -> LOGGER.debug("delete file {}", f))
+                .forEach(p -> {
+                    try {
+                        Files.delete(p);
+                    } catch (NoSuchFileException ex) {
+                        LOGGER.error("{}: no such" + " file or directory", p);
+                    } catch (DirectoryNotEmptyException ex) {
+                        LOGGER.error("{} not empty", p);
+                    } catch (IOException ex) {
+                        LOGGER.error(ex.getMessage());
+                    }
+                });
     }
 
 //    public static void rmDirRecursively(String dirName) throws IOException {

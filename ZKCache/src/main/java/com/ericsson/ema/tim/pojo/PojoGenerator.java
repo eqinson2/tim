@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +31,7 @@ public class PojoGenerator {
 
     private static void generateTupleClz(Table table) {
         Map<String, Class<?>> props = table.getRecords().getTuples().stream().collect(
-            HashMap<String, Class<?>>::new,
+            LinkedHashMap<String, Class<?>>::new,
             (map, nameType) -> map.put(nameType.getName(), typesForTuple.get(nameType.getType())),
             (m, u) -> {
             });

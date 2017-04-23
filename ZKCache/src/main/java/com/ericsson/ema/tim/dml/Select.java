@@ -1,7 +1,7 @@
 package com.ericsson.ema.tim.dml;
 
+import com.ericsson.ema.tim.dml.group.GroupBy;
 import com.ericsson.ema.tim.dml.order.OrderBy;
-import com.ericsson.ema.tim.dml.predicate.AbstractPredicate;
 import com.ericsson.ema.tim.dml.predicate.Predicate;
 import com.ericsson.ema.tim.reflection.MethodInvocationCache;
 
@@ -15,15 +15,17 @@ import static com.ericsson.ema.tim.dml.TableInfoMap.tableInfoMap;
 import static com.ericsson.ema.tim.lock.ZKCacheRWLockMap.zkCacheRWLock;
 import static com.ericsson.ema.tim.reflection.MethodInvocationCache.AccessType.GET;
 import static com.ericsson.ema.tim.reflection.Tab2MethodInvocationCacheMap.tab2MethodInvocationCacheMap;
+import static java.util.stream.Collectors.groupingBy;
 
 public class Select implements Selector {
     private final static String TUPLE_FIELD = "records";
 
     private final List<String> selectedFields;
     private final List<Predicate> predicates = new ArrayList<>();
-    private final List<OrderBy> orderbys = new ArrayList<>();
-    private int limit = -1;
-    private int skip = -1;
+    private final List<OrderBy> orderBys = new ArrayList<>();
+    private GroupBy groupBy;
+    private int limit = Integer.MIN_VALUE;
+    private int skip = Integer.MIN_VALUE;
 
     private String table;
     private TableInfoContext context;
@@ -67,23 +69,31 @@ public class Select implements Selector {
     @Override
     public Selector where(Predicate predicate) {
         this.predicates.add(predicate);
-        ((AbstractPredicate) predicate).setSelector(this);
+        ((SelectClause) predicate).setSelector(this);
         return this;
     }
 
     @Override
-    public Selector orderby(String field, String asc) {
+    public Selector orderBy(String field, String asc) {
         OrderBy o = OrderBy.orderby(field, asc);
-        this.orderbys.add(o);
+        this.orderBys.add(o);
         o.setSelector(this);
         return this;
     }
 
     @Override
-    public Selector orderby(String field) {
+    public Selector orderBy(String field) {
         OrderBy o = OrderBy.orderby(field);
-        this.orderbys.add(o);
+        this.orderBys.add(o);
         o.setSelector(this);
+        return this;
+    }
+
+    @Override
+    public Selector groupBy(String field) {
+        GroupBy g = GroupBy.groupBy(field);
+        this.groupBy = g;
+        g.setSelector(this);
         return this;
     }
 
@@ -107,12 +117,12 @@ public class Select implements Selector {
         try {
             return getter.invoke(obj);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e.getMessage());//should never happen
+            throw new DmlBadSyntaxException(e.getMessage());//should never happen
         }
     }
 
     private void initExecuteContext() {
-        this.context = tableInfoMap.lookup(table).orElseThrow(() -> new RuntimeException("Error: Selecting a " +
+        this.context = tableInfoMap.lookup(table).orElseThrow(() -> new DmlBadSyntaxException("Error: Selecting a " +
             "non-existing table:" + table));
         this.methodInvocationCache = tab2MethodInvocationCacheMap.lookup(table);
 
@@ -132,9 +142,8 @@ public class Select implements Selector {
         zkCacheRWLock.readLockTable(table);
         try {
             initExecuteContext();
-            Stream<Object> stream = records.stream().filter(
-                r -> predicates.stream().map(c -> c.eval(r)).reduce(true, Boolean::logicalAnd));
-            Optional<Comparator<Object>> c = orderbys.stream().map(OrderBy::comparing).reduce(Comparator::thenComparing);
+            Stream<Object> stream = records.stream().filter(internalPredicate());
+            Optional<Comparator<Object>> c = orderBys.stream().map(OrderBy::comparing).reduce(Comparator::thenComparing);
             if (c.isPresent()) {
                 stream = stream.sorted(c.get());
             }
@@ -150,18 +159,19 @@ public class Select implements Selector {
         }
     }
 
+
     @Override
-    public List<Object> execute() {
+    public List<Object> collect() {
         if (!selectedFields.isEmpty())
-            throw new RuntimeException("Must use executeWithSelectFields if some fields are to be selected");
+            throw new DmlBadSyntaxException("Error: must use collectBySelectFields if some fields are to be selected");
 
         return internalExecute();
     }
 
     @Override
-    public List<List<Object>> executeWithSelectFields() {
+    public List<List<Object>> collectBySelectFields() {
         if (selectedFields.isEmpty())
-            throw new RuntimeException("Must use execute if full fields are to be selected");
+            throw new DmlBadSyntaxException("Error: Must use execute if full fields are to be selected");
 
         List<List<Object>> selectedResult = new ArrayList<>();
         for (Object obj : internalExecute()) {
@@ -169,6 +179,67 @@ public class Select implements Selector {
                 invokeGetByReflection(obj, field)).collect(Collectors.toList()));
         }
         return selectedResult;
+    }
+
+    @Override
+    public Map<Object, List<Object>> collectByGroup() {
+        if (!this.getSelectedFields().isEmpty())
+            throw new DmlBadSyntaxException("Error: should not specify selected fields when groupBy");
+
+        zkCacheRWLock.readLockTable(table);
+        try {
+            initExecuteContext();
+            Stream<Object> stream = records.stream().filter(internalPredicate());
+            Optional<Comparator<Object>> c = orderBys.stream().map(OrderBy::comparing).reduce(Comparator::thenComparing);
+            if (c.isPresent()) {
+                stream = stream.sorted(c.get());
+            }
+            if (skip > 0) {
+                stream = stream.skip(skip);
+            }
+            if (limit > 0) {
+                stream = stream.limit(limit);
+            }
+            if (groupBy != null) {
+                return stream.collect(groupingBy(groupBy.grouping()));
+            } else {
+                throw new DmlBadSyntaxException("Error: must specify groupBy when using collectByGroup.");
+            }
+        } finally {
+            zkCacheRWLock.readUnLockTable(table);
+        }
+    }
+
+    @Override
+    public long count() {
+        if (limit != Integer.MIN_VALUE || skip != Integer.MIN_VALUE)
+            throw new DmlBadSyntaxException("Error: meaningless to specify skip/limit in count.");
+
+        zkCacheRWLock.readLockTable(table);
+        try {
+            initExecuteContext();
+            return records.stream().filter(internalPredicate()).count();
+        } finally {
+            zkCacheRWLock.readUnLockTable(table);
+        }
+    }
+
+    @Override
+    public boolean exists() {
+        if (limit != Integer.MIN_VALUE || skip != Integer.MIN_VALUE)
+            throw new DmlBadSyntaxException("Error: meaningless to specify skip/limit in exists.");
+
+        zkCacheRWLock.readLockTable(table);
+        try {
+            initExecuteContext();
+            return records.stream().anyMatch(internalPredicate());
+        } finally {
+            zkCacheRWLock.readUnLockTable(table);
+        }
+    }
+
+    private java.util.function.Predicate<Object> internalPredicate() {
+        return r -> predicates.stream().map(c -> c.eval(r)).reduce(true, Boolean::logicalAnd);
     }
 }
 

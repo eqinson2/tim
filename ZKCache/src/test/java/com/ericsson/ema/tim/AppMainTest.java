@@ -2,11 +2,19 @@ package com.ericsson.ema.tim;
 
 import com.ericsson.ema.tim.utils.FileUtils;
 import com.ericsson.ema.tim.zookeeper.ZKMonitor;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import static com.ericsson.ema.tim.dml.Select.select;
 import static com.ericsson.ema.tim.dml.predicate.BiggerThan.gt;
@@ -20,7 +28,10 @@ import static com.ericsson.ema.tim.dml.predicate.UnLike.unlike;
 public class AppMainTest {
     private final static Logger LOGGER = LoggerFactory.getLogger(AppMainTest.class);
 
-    public static void main(String[] args) throws Exception {
+    private final static String tableName = "Eqinson";
+    private final static String testFile = "test.json";
+
+//    public static void main(String[] args) throws Exception {
 //        zkConnectionManager.init();
 //        ZKMonitor zkMonitor = new ZKMonitor(zkConnectionManager);
 //        zkMonitor.start();
@@ -32,95 +43,129 @@ public class AppMainTest {
 //                return;
 //            }
 //        }
-    }
+//    }
 
-    private static void performanceTest(String tableName) {
-        long start = System.currentTimeMillis();
-        int LOOPNUM = 100000;
-        for (int i = 0; i < LOOPNUM; i++) {
-            select().from(tableName).where(eq("name", "eqinson1")).where(eq("age", "31")).execute();
-            select().from(tableName).where(eq("name", "eqinson2")).where(eq("age", "33")).execute();
-            select().from(tableName).where(eq("name", "eqinson4")).where(eq("age", "34")).where(eq
-                ("job", "manager")).execute();
-            select("age", "job").from(tableName).where(eq("name", "eqinson4"))
-                .where(eq("age", "34")).where(eq("job", "manager")).executeWithSelectFields();
-        }
-        System.out.println(System.currentTimeMillis() - start);
+    @BeforeClass
+    public static void init() throws IOException, URISyntaxException {
+        URL url = Thread.currentThread().getContextClassLoader().getResource(testFile);
+        if (url != null) {
+            File file = new File(url.getPath());
+            LOGGER.info("=====================load json: {}=====================", testFile);
+            ZKMonitor zm = new ZKMonitor(null);
+            zm.doLoad(tableName, FileUtils.readFile(Paths.get(url.toURI())));
+        } else throw new FileNotFoundException(testFile + " not found");
     }
 
     @Test
-    public void doTest() throws Exception {
-        String jfname = "json/test.json";
-        LOGGER.info("=====================load json: {}=====================", jfname);
-        String tableName = "Eqinson";
-        ZKMonitor zm = new ZKMonitor(null);
-        zm.doLoad(tableName, FileUtils.readFile(jfname));
-
+    public void testEq() {
         LOGGER.info("=====================select some data for testing eq=====================");
         List<Object> result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age",
-            "1")).execute();
-        System.out.println(result.size());
+            "1")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
 
         result = select().from(tableName).where(eq("name", "eqinson2")).where(eq("age", "6"))
-            .execute();
-        System.out.println(result.size());
-
-        result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age", "4")).where(eq
-            ("job", "manager")).execute();
-        System.out.println(result.size());
-
-        result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age", "4")).where(eq
-            ("job", "manager")).orderby("name", "asc").orderby("job", "desc").execute();
+            .collect();
         result.forEach(System.out::println);
+        System.out.println();
 
+        result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age", "4")).where(eq
+            ("job", "manager")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
+        result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age", "4")).where(eq
+            ("job", "manager")).orderBy("name", "asc").orderBy("job", "desc").collect();
+        result.forEach(System.out::println);
+        System.out.println();
+    }
+
+    @Test
+    public void testUnEq() {
         LOGGER.info("=====================select some data for testing uneq=====================");
-        result = select().from(tableName).where(uneq("name", "eqinson1")).where(eq("age",
-            "1")).execute();
-        System.out.println(result.size());
+        List<Object> result = select().from(tableName).where(uneq("name", "eqinson1")).where(eq("age",
+            "1")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
 
         result = select().from(tableName).where(eq("name", "eqinson2")).where(uneq("age", "6"))
-            .execute();
-        System.out.println(result.size());
+            .collect();
+        result.forEach(System.out::println);
+        System.out.println();
 
         List<List<Object>> sliceRes = select("name", "age", "job").from(tableName).
             where(uneq("name", "eqinson1"))
-            .orderby("name", "asc").orderby("age", "desc").orderby("job")
-            .executeWithSelectFields();
+            .orderBy("name", "asc").orderBy("age", "desc").orderBy("job")
+            .collectBySelectFields();
         printResult(sliceRes);
+        System.out.println();
+    }
 
+    @Test
+    public void testLike() {
         LOGGER.info("=====================select some data for testing like/unlike=====================");
-        result = select().from(tableName).where(like("name", "eqinson")).where(eq("age",
-            "1")).execute();
-        System.out.println(result.size());
+        List<Object> result = select().from(tableName).where(like("name", "eqinson")).where(eq("age",
+            "1")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
 
         result = select().from(tableName).where(unlike("name", "eqinson")).where(uneq("age", "6"))
-            .execute();
-        System.out.println(result.size());
+            .collect();
+        result.forEach(System.out::println);
+        System.out.println();
 
-        sliceRes = select("name", "age", "job").from(tableName).
+        List<List<Object>> sliceRes = select("name", "age", "job").from(tableName).
             where(like("name", "eqinson")).where(unlike("job", "engineer"))
-            .orderby("name", "asc").orderby("age", "desc").orderby("job")
-            .executeWithSelectFields();
+            .orderBy("name", "asc").orderBy("age", "desc").orderBy("job")
+            .collectBySelectFields();
         printResult(sliceRes);
+    }
 
+    @Test
+    public void testGtLt() {
         LOGGER.info("=====================select some data for testing gt/lt=====================");
-        sliceRes = select("name", "age", "job").from(tableName).
+        List<List<Object>> sliceRes = select("name", "age", "job").from(tableName).
             where(like("name", "eqinson")).where(unlike("job", "engineer"))
             .where(gt("age", 3)).where(lt("age", 6))
-            .orderby("name", "asc").orderby("age", "desc").orderby("job").limit(2)
-            .executeWithSelectFields();
+            .orderBy("name", "asc").orderBy("age", "desc").orderBy("job").limit(2)
+            .collectBySelectFields();
         printResult(sliceRes);
+        System.out.println();
+    }
 
+    @Test
+    public void testRange() {
         LOGGER.info("=====================select some data for testing range=====================");
-        sliceRes = select("name", "age", "job").from(tableName).
+        List<List<Object>> sliceRes = select("name", "age", "job").from(tableName).
             where(like("name", "eqinson")).where(unlike("job", "engineer"))
             .where(range("age", 4, 6))
-            .orderby("name", "asc").orderby("age", "desc").orderby("job").limit(2)
-            .executeWithSelectFields();
+            .orderBy("name", "asc").orderBy("age", "desc").orderBy("job").limit(2)
+            .collectBySelectFields();
         printResult(sliceRes);
+        System.out.println();
+    }
 
-        LOGGER.info("=====================performance testing=====================");
-//        performanceTest(tableName);
+    @Test
+    public void testCount() {
+        LOGGER.info("=====================select some data for testing count/exists=====================");
+        System.out.println(select("name", "age", "job").from(tableName).
+            where(like("name", "eqinson")).where(unlike("job", "engineer"))
+            .where(range("age", 4, 6))
+            .count());
+
+        System.out.println(select("name", "age", "job").from(tableName).
+            where(like("name", "eqinson")).where(unlike("job", "engineer"))
+            .where(range("age", 4, 6))
+            .exists());
+    }
+
+    @Test
+    public void doGroupBy() throws Exception {
+        LOGGER.info("=====================select some data for testing groupby=====================");
+        Map<Object, List<Object>> res = select().from(tableName).
+            where(like("name", "eqinson")).where(like("job", "engineer"))
+            .where(range("age", 1, 6)).groupBy("name").collectByGroup();
+        printResultGroup(res);
     }
 
     private void printResult(List<List<Object>> sliceRes) {
@@ -131,5 +176,15 @@ public class AppMainTest {
             }
             System.out.println();
         }
+    }
+
+    private void printResultGroup(Map<Object, List<Object>> mapRes) {
+        mapRes.forEach((k, v) -> {
+            if (v != null) {
+                List<Object> row = (List<Object>) v;
+                row.forEach(r -> System.out.print(r + "   "));
+            }
+            System.out.println();
+        });
     }
 }

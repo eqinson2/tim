@@ -1,12 +1,10 @@
 package com.ericsson.ema.tim.json;
 
-import com.ericsson.ema.tim.utils.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -87,11 +85,6 @@ public class JsonLoader {
                 t.forEach(f -> LOGGER.debug("field info: {}", f));
             });
         }
-    }
-
-    public void loadJsonFromFile(String jsonFile) throws IOException {
-        String jsonStr = FileUtils.readFile(jsonFile);
-        loadJsonFromString(jsonStr);
     }
 
     public String getTableName() {
