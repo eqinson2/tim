@@ -1,7 +1,8 @@
 package com.ericsson.ema.tim.dml.group;
 
 import com.ericsson.ema.tim.dml.DataTypes;
-import com.ericsson.ema.tim.dml.DmlBadSyntaxException;
+import com.ericsson.ema.tim.exception.DmlBadSyntaxException;
+import com.ericsson.ema.tim.exception.DmlNoSuchFieldException;
 import com.ericsson.ema.tim.dml.SelectClause;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,8 @@ public class GroupBy extends SelectClause {
     public Function<Object, Object> grouping() {
         Map<String, String> metadata = getSelector().getContext().getTableMetadata();
         String fieldType = metadata.get(field);
+        if (fieldType == null)
+            throw new DmlNoSuchFieldException(field);
 
         switch (fieldType) {
             case DataTypes.String:

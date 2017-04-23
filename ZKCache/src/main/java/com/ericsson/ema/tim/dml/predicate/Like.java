@@ -1,7 +1,8 @@
 package com.ericsson.ema.tim.dml.predicate;
 
 import com.ericsson.ema.tim.dml.DataTypes;
-import com.ericsson.ema.tim.dml.DmlBadSyntaxException;
+import com.ericsson.ema.tim.exception.DmlBadSyntaxException;
+import com.ericsson.ema.tim.exception.DmlNoSuchFieldException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,9 @@ public class Like extends AbstractPredicate implements Predicate {
         Object fieldVal = getFiledValFromTupleByName(tuple);
         Map<String, String> metadata = getSelector().getContext().getTableMetadata();
         String fieldType = metadata.get(field);
+        if (fieldType == null)
+            throw new DmlNoSuchFieldException(field);
+
         switch (fieldType) {
             case DataTypes.String:
                 return ((String) fieldVal).contains((String) this.valueToComp);

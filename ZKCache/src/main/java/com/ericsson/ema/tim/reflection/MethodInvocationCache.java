@@ -1,5 +1,6 @@
 package com.ericsson.ema.tim.reflection;
 
+import com.ericsson.ema.tim.exception.DmlNoSuchFieldException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +26,7 @@ public class MethodInvocationCache {
         return Arrays.stream(beanInfo.getPropertyDescriptors()).filter(prop -> property
             .equals(prop.getName()))
             .map(PropertyDescriptor::getReadMethod).findFirst().orElseThrow(() -> new
-                RuntimeException("no such method:" + property));
+                DmlNoSuchFieldException(property));
     }
 
     public Method get(Class<?> clz, String field, AccessType accessType) {

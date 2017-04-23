@@ -1,5 +1,7 @@
 package com.ericsson.ema.tim.dml;
 
+import com.ericsson.ema.tim.exception.DmlBadSyntaxException;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 

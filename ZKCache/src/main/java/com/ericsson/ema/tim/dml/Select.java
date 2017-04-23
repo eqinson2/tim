@@ -3,6 +3,7 @@ package com.ericsson.ema.tim.dml;
 import com.ericsson.ema.tim.dml.group.GroupBy;
 import com.ericsson.ema.tim.dml.order.OrderBy;
 import com.ericsson.ema.tim.dml.predicate.Predicate;
+import com.ericsson.ema.tim.exception.DmlBadSyntaxException;
 import com.ericsson.ema.tim.reflection.MethodInvocationCache;
 
 import java.lang.reflect.InvocationTargetException;

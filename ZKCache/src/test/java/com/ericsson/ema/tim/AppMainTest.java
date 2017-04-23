@@ -1,6 +1,7 @@
 package com.ericsson.ema.tim;
 
-import com.ericsson.ema.tim.dml.DmlBadSyntaxException;
+import com.ericsson.ema.tim.exception.DmlBadSyntaxException;
+import com.ericsson.ema.tim.exception.DmlNoSuchFieldException;
 import com.ericsson.ema.tim.utils.FileUtils;
 import com.ericsson.ema.tim.zookeeper.ZKMonitor;
 import junit.framework.TestCase;
@@ -160,7 +161,7 @@ public class AppMainTest {
     }
 
     @Test
-    public void doGroupBy() throws Exception {
+    public void testGroupBy() throws Exception {
         LOGGER.info("=====================select some data for testing groupby=====================");
         Map<Object, List<Object>> res = select().from(tableName).
             where(like("name", "eqinson")).where(like("job", "engineer"))
@@ -168,8 +169,40 @@ public class AppMainTest {
         printResultGroup(res);
     }
 
+    @Test(expected = DmlNoSuchFieldException.class)
+    public void testGroupByDmlNoSuchFieldException() throws Exception {
+        LOGGER.info("=====================select some data for testing groupby=====================");
+        select().from(tableName).
+            where(eq("name1", "eqinson")).where(like("job", "engineer"))
+            .where(range("age", 1, 10)).groupBy("name").collectByGroup();
+
+        select().from(tableName).
+            where(like("name", "eqinson")).where(like("job1", "engineer"))
+            .where(range("age", 1, 10)).groupBy("name").collectByGroup();
+
+        select().from(tableName).
+            where(like("name", "eqinson")).where(like("job", "engineer"))
+            .where(range("age1", 1, 10)).groupBy("name").collectByGroup();
+
+        select().from(tableName).
+            where(like("name", "eqinson")).where(unlike("job1", "engineer"))
+            .where(range("age", 1, 10)).groupBy("name").collectByGroup();
+
+        select().from(tableName).
+            where(like("name", "eqinson")).where(unlike("job", "engineer"))
+            .where(gt("age1", 1)).groupBy("name").collectByGroup();
+
+        select().from(tableName).
+            where(like("name", "eqinson")).where(unlike("job", "engineer"))
+            .where(lt("age1", 10)).groupBy("name").collectByGroup();
+
+        select().from(tableName).
+            where(like("name", "eqinson")).where(like("job", "engineer"))
+            .where(range("age", 1, 10)).groupBy("name1").collectByGroup();
+    }
+
     @Test(expected = DmlBadSyntaxException.class)
-    public void doGroupByException() {
+    public void testGroupByDmlBadSyntaxException() {
         LOGGER.info("=====================select some data for testing groupby with " +
             "DmlBadSyntaxException=====================");
         select().from(tableName).

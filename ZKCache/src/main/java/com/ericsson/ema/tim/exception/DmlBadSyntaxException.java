@@ -1,4 +1,4 @@
-package com.ericsson.ema.tim.dml;
+package com.ericsson.ema.tim.exception;
 
 /**
  * Created by eqinson on 2017/4/23.
