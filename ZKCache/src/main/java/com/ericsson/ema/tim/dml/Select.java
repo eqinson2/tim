@@ -92,8 +92,8 @@ public class Select implements Selector {
     @Override
     public Selector groupBy(String field) {
         if (groupBy != null)
-            throw new DmlBadSyntaxException("Error: only support one groupby");
-        
+            throw new DmlBadSyntaxException("Error: only support one groupBy Clause");
+
         GroupBy g = GroupBy.groupBy(field);
         this.groupBy = g;
         g.setSelector(this);
@@ -102,15 +102,17 @@ public class Select implements Selector {
 
     @Override
     public Selector limit(int limit) {
-        if (limit > 0)
-            this.limit = limit;
+        if (limit <= 0)
+            throw new DmlBadSyntaxException("Error: limit must be > 0");
+        this.limit = limit;
         return this;
     }
 
     @Override
     public Selector skip(int skip) {
-        if (skip > 0)
-            this.skip = skip;
+        if (skip <= 0)
+            throw new DmlBadSyntaxException("Error: skip must be > 0");
+        this.skip = skip;
         return this;
     }
 

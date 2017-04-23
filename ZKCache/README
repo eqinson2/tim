@@ -23,7 +23,7 @@ supported clauses:
     lt: test if left field < right oper, only support int type
     range:  test if left field in range of [from, to), only support int type
     orderBy: order by given field, either asc(default) or desc and support cascading
-    groupBy: group by give field, and not support cascading and field select
+    groupBy: group by given field, and not support cascading and field select
     limit: only select first n limit element
     skip: skip first n element
 
