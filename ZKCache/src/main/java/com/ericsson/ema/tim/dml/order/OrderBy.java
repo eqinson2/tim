@@ -70,8 +70,8 @@ public class OrderBy {
                     return !reversed ? s1.compareTo(s2) : s2.compareTo(s1);
                 };
             default:
-                LOGGER.error("unsupported data type: {}", fieldType);
-                throw new RuntimeException("unsupported data type: " + fieldType);
+                LOGGER.error("unsupported data type: {},{}", field, fieldType);
+                throw new RuntimeException("unsupported data type: " + field + "," + fieldType);
         }
     }
 
