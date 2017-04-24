@@ -6,4 +6,5 @@ package com.ericsson.ema.tim.dml;
 public class DataTypes {
     public final static String Int = "int";
     public final static String String = "string";
+    public final static String Boolean = "bool";
 }

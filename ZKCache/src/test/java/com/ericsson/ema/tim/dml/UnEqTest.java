@@ -41,6 +41,24 @@ public class UnEqTest {
         result.forEach(System.out::println);
         System.out.println();
 
+        result = select().from(tableName).where(uneq("maintenance", "TRUE")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
+        result = select().from(tableName).where(eq("name", "eqinson2"))
+                .where(uneq("maintenance", "TRUE")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
+        result = select().from(tableName).where(uneq("maintenance", "FALSE")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
+        result = select().from(tableName).where(eq("name", "eqinson2"))
+                .where(uneq("maintenance", "FALSE")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
         List<List<Object>> sliceRes = select("name", "age", "job").from(tableName).
             where(uneq("name", "eqinson1"))
             .orderBy("name", "asc").orderBy("age", "desc").orderBy("job")

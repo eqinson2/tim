@@ -45,8 +45,30 @@ public class EqTest {
         result.forEach(System.out::println);
         System.out.println();
 
+        result = select().from(tableName).where(eq("maintenance", "TRUE")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
+        result = select().from(tableName).where(eq("name", "eqinson1"))
+                .where(eq("maintenance", "TRUE")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
+        result = select().from(tableName).where(eq("maintenance", "FALSE")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
+        result = select().from(tableName).where(eq("name", "eqinson1"))
+                .where(eq("maintenance", "FALSE")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
         result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age", "4")).where(eq
             ("job", "manager")).orderBy("name", "asc").orderBy("job", "desc").collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
+        result = select().from(tableName).orderBy("maintenance", "desc").orderBy("name", "asc").collect();
         result.forEach(System.out::println);
         System.out.println();
     }

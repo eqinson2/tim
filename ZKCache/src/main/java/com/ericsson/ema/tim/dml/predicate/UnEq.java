@@ -38,6 +38,8 @@ public class UnEq extends AbstractPredicate implements Predicate {
                 return !(this.valueToComp).equals(fieldVal);
             case DataTypes.Int:
                 return !(Integer.valueOf((String) this.valueToComp)).equals(fieldVal);
+            case DataTypes.Boolean:
+                return !(Boolean.valueOf((String) this.valueToComp)).equals(fieldVal);
             default:
                 LOGGER.error("unsupported data type: {},{}", field, fieldType);
                 throw new DmlBadSyntaxException("unsupported data type: " + field + "," + fieldType);
