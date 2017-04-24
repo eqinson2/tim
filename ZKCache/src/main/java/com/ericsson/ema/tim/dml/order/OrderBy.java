@@ -64,6 +64,12 @@ public class OrderBy extends SelectClause {
                     Integer s2 = (Integer) getFiledValFromTupleByName(o2);
                     return !reversed ? s1.compareTo(s2) : s2.compareTo(s1);
                 };
+            case DataTypes.Boolean:
+                return (o1, o2) -> {
+                    Boolean b1 = (Boolean) getFiledValFromTupleByName(o1);
+                    Boolean b2 = (Boolean) getFiledValFromTupleByName(o2);
+                    return !reversed ? b1.compareTo(b2) : b2.compareTo(b1);
+                };
             default:
                 LOGGER.error("unsupported data type: {},{}", field, fieldType);
                 throw new DmlBadSyntaxException("Error: unsupported data type: " + field + "," + fieldType);

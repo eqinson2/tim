@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.ericsson.ema.tim.dml.Select.select;
+import static com.ericsson.ema.tim.dml.predicate.Eq.eq;
 import static com.ericsson.ema.tim.dml.predicate.Like.like;
 import static com.ericsson.ema.tim.dml.predicate.Range.range;
 
@@ -36,5 +37,8 @@ public class GroupTest {
             where(like("name", "eqinson")).where(like("job", "engineer"))
             .where(range("age", 1, 10)).groupBy("name").collectByGroup();
         Util.printResultGroup(res);
+
+        Map<Object, List<Object>> res1 = select().from(tableName).groupBy("maintenance").collectByGroup();
+        Util.printResultGroup(res1);
     }
 }

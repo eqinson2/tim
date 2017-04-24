@@ -39,6 +39,7 @@ public class GroupBy extends SelectClause {
         switch (fieldType) {
             case DataTypes.String:
             case DataTypes.Int:
+            case DataTypes.Boolean:
                 return this::getFiledValFromTupleByName;
             default:
                 LOGGER.error("unsupported data type: {},{}", field, fieldType);

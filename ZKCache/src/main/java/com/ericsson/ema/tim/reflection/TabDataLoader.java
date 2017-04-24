@@ -40,6 +40,9 @@ public class TabDataLoader {
             case DataTypes.Int:
                 value = Integer.valueOf(field.getFieldValue());
                 break;
+            case DataTypes.Boolean:
+                value = Boolean.valueOf(field.getFieldValue());
+                break;
             default:
                 LOGGER.error("unsupported data type: {}", field.getFieldType());
         }

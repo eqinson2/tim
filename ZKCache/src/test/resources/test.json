@@ -13,50 +13,53 @@
       },
       {
         "hometown": "string"
+      },
+      {
+        "maintenance": "bool"
       }
     ],
     "Content": [
       {
-        "Tuple": "{eqinson1}{1}{software engineer}{SH}"
+        "Tuple": "{eqinson1}{1}{software engineer}{SH}{TRUE}"
       },
       {
-        "Tuple": "{eqinson1}{2}{support engineer}{SH}"
+        "Tuple": "{eqinson1}{2}{support engineer}{SH}{TRUE}"
       },
       {
-        "Tuple": "{eqinson1}{3}{test engineer}{SH}"
+        "Tuple": "{eqinson1}{3}{test engineer}{SH}{FALSE}"
       },
       {
-        "Tuple": "{eqinson1}{4}{manager}{SH}"
+        "Tuple": "{eqinson1}{4}{manager}{SH}{TRUE}"
       },
       {
-        "Tuple": "{eqinson2}{5}{admin}{SH}"
+        "Tuple": "{eqinson2}{5}{admin}{SH}{TRUE}"
       },
       {
-        "Tuple": "{eqinson2}{6}{HR}{SH}"
+        "Tuple": "{eqinson2}{6}{HR}{SH}{TRUE}"
       },
       {
-        "Tuple": "{eqinson2}{7}{software engineer}{SH}"
+        "Tuple": "{eqinson2}{7}{software engineer}{SH}{FALSE}"
       },
       {
-        "Tuple": "{eqinson2}{8}{support engineer}{SH}"
+        "Tuple": "{eqinson2}{8}{support engineer}{SH}{TRUE}"
       },
       {
-        "Tuple": "{eqinson2}{9}{test engineer}{SH}"
+        "Tuple": "{eqinson2}{9}{test engineer}{SH}{TRUE}"
       },
       {
-        "Tuple": "{eqinson2}{5}{admin}{SH}"
+        "Tuple": "{eqinson2}{5}{admin}{SH}{TRUE}"
       },
       {
-        "Tuple": "{eqinson2}{6}{HR}{SH}"
+        "Tuple": "{eqinson2}{6}{HR}{SH}{TRUE}"
       },
       {
-        "Tuple": "{eqinson3}{7}{software engineer}{SH}"
+        "Tuple": "{eqinson3}{7}{software engineer}{SH}{FALSE}"
       },
       {
-        "Tuple": "{eqinson3}{8}{support engineer}{SH}"
+        "Tuple": "{eqinson3}{8}{support engineer}{SH}{TRUE}"
       },
       {
-        "Tuple": "{eqinson3}{9}{test engineer}{SH}"
+        "Tuple": "{eqinson3}{9}{test engineer}{SH}{TRUE}"
       }
     ]
   }
