@@ -39,7 +39,7 @@ public enum ZKConnectionManager {
 
     ZKConnectionManager() {
         try {
-            connectStr = SystemPropertyUtil.getAndAssertProperty("com.ericsson.dve.timpoc.zkconnstr");
+            connectStr = SystemPropertyUtil.getAndAssertProperty("com.ericsson.ema.tim.zkconnstr");
         } catch (IllegalArgumentException e) {
             connectStr = "localhost:6181";
         }

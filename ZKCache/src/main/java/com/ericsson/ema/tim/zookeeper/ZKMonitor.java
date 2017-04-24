@@ -6,6 +6,7 @@ import com.ericsson.ema.tim.pojo.model.NameType;
 import com.ericsson.ema.tim.pojo.model.Table;
 import com.ericsson.ema.tim.pojo.model.TableTuple;
 import com.ericsson.ema.tim.reflection.TabDataLoader;
+import com.ericsson.util.SystemPropertyUtil;
 import com.ericsson.zookeeper.NodeChildCache;
 import com.ericsson.zookeeper.NodeChildrenChangedListener;
 import com.ericsson.zookeeper.ZooKeeperUtil;
@@ -42,6 +43,12 @@ public class ZKMonitor {
     }
 
     public void start() {
+        try {
+            zkRootPath = SystemPropertyUtil.getAndAssertProperty("com.ericsson.ema.tim.zkRootPath");
+        } catch (IllegalArgumentException e) {
+            zkRootPath = "/TIM_POC";
+        }
+
         zkConnectionManager.registerListener(new ZooKeeperConnectionStateListenerImpl());
         try {
             ZooKeeperUtil.createRecursive(getConnection(), zkRootPath, null, OPEN_ACL_UNSAFE, PERSISTENT);
