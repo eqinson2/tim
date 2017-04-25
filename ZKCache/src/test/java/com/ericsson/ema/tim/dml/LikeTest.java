@@ -38,8 +38,16 @@ public class LikeTest {
         result.forEach(System.out::println);
         System.out.println();
 
+        result = select().from(tableName).where(like("job", "^[A-Z]*+ admin+$")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
         result = select().from(tableName).where(unlike("name", "eqinson")).where(uneq("age", "6"))
             .collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
+        result = select().from(tableName).where(unlike("job", "engineer|manager")).collect();
         result.forEach(System.out::println);
         System.out.println();
 
