@@ -35,7 +35,7 @@ public class UnLike extends AbstractPredicate implements Predicate {
 
         switch (fieldType) {
             case DataTypes.String:
-                return !((String) fieldVal).contains((String) this.valueToComp);
+                return !((String) fieldVal).matches((String) this.valueToComp);
             default:
                 LOGGER.error("unsupported data type: {},{}", field, fieldType);
                 throw new DmlBadSyntaxException("unsupported data type: " + field + "," + fieldType);

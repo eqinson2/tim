@@ -33,18 +33,26 @@ public class LikeTest {
     @Test
     public void testLike() {
         LOGGER.info("=====================select some data for testing like/unlike=====================");
-        List<Object> result = select().from(tableName).where(like("name", "eqinson")).where(eq("age",
+        List<Object> result = select().from(tableName).where(like("name", "eqinson[0-9]")).where(eq("age",
             "1")).collect();
         result.forEach(System.out::println);
         System.out.println();
 
-        result = select().from(tableName).where(unlike("name", "eqinson")).where(uneq("age", "6"))
+        result = select().from(tableName).where(unlike("name", "eqinson[0-9]")).where(uneq("age", "6"))
             .collect();
         result.forEach(System.out::println);
         System.out.println();
 
+        result = select().from(tableName).where(like("job", "^HR+ admin+$")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
+        result = select().from(tableName).where(unlike("job", "^HR|.*admin$")).collect();
+        result.forEach(System.out::println);
+        System.out.println();
+
         List<List<Object>> sliceRes = select("name", "age", "job").from(tableName).
-            where(like("name", "eqinson")).where(unlike("job", "engineer"))
+            where(like("name", "eqinson[0-9]")).where(unlike("job", ".*engineer$"))
             .orderBy("name", "asc").orderBy("age", "desc").orderBy("job")
             .collectBySelectFields();
         Util.printResult(sliceRes);
