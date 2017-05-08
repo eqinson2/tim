@@ -43,7 +43,7 @@ public class OrderBy extends SelectClause {
 
     public Comparator<Object> comparing() {
         if (!getSelector().getSelectedFields().isEmpty() && !getSelector().getSelectedFields().contains(field))
-            throw new IllegalArgumentException(String.format("Error: order by parameter %s not in selected field %s",
+            throw new DmlBadSyntaxException(String.format("Error: order by parameter %s not in selected field %s",
                 field, getSelector().getSelectedFields().stream().collect(Collectors.joining(",", "{", "}"))));
 
         Map<String, String> metadata = getSelector().getContext().getTableMetadata();

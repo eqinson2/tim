@@ -9,14 +9,14 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Optional;
 
-public class JavaBeanReflectionProxy {
+class JavaBeanReflectionProxy {
     private final static String TUPLENAME = "records";
     private final static Logger LOGGER = LoggerFactory.getLogger(JavaBeanReflectionProxy.class);
 
     private final Object instance;
     private final Class<?> tupleListType;
 
-    public JavaBeanReflectionProxy(Object instance) throws ClassNotFoundException {
+    JavaBeanReflectionProxy(Object instance) throws ClassNotFoundException {
         this.instance = instance;
         String tupleClassName = instance.getClass().getName() + "Data";
         //must use same classloader as PojoGen
@@ -25,21 +25,21 @@ public class JavaBeanReflectionProxy {
 //        tupleListType = getTupleListTypeInfo().orElseGet(null);
     }
 
-    public Class<?> getTupleListType() {
+    Class<?> getTupleListType() {
         return tupleListType;
     }
 
     private Optional<? extends Class<?>> getTupleListTypeInfo() {
         Field field = Arrays.stream(instance.getClass().getDeclaredFields()).filter(f ->
-            TUPLENAME.equals(f.getName())).findFirst().orElseThrow(() -> new RuntimeException
-            ("no such field :" + TUPLENAME));
+                TUPLENAME.equals(f.getName())).findFirst().orElseThrow(() -> new RuntimeException
+                ("no such field :" + TUPLENAME));
 
         Type genericFieldType = field.getGenericType();
         if (genericFieldType instanceof ParameterizedType) {
             ParameterizedType aType = (ParameterizedType) genericFieldType;
             Type[] fieldArgTypes = aType.getActualTypeArguments();
             return fieldArgTypes == null ? Optional.empty() : Arrays.stream(fieldArgTypes).map(t ->
-                (Class<?>) t).findFirst();
+                    (Class<?>) t).findFirst();
         }
 
         return Optional.empty();

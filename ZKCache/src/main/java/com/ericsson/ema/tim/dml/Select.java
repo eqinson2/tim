@@ -53,7 +53,7 @@ public class Select implements Selector {
         return Collections.unmodifiableList(selectedFields);
     }
 
-    public MethodInvocationCache getMethodInvocationCache() {
+    MethodInvocationCache getMethodInvocationCache() {
         return methodInvocationCache;
     }
 
