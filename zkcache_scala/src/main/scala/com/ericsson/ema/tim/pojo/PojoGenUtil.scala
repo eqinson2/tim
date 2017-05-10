@@ -33,7 +33,7 @@ object PojoGenUtil {
 		cc.toClass(new Loader)
 	}
 
-	private[pojo] def generateListPojo(className: String, properties: Map[String, Class[_]]): Class[_] = {
+	def generateListPojo(className: String, properties: Map[String, Class[_]]): Class[_] = {
 		val cc = makeClass(className)
 		cc.addInterface(resolveCtClass(classOf[Serializable]))
 		properties.foreach(kv => {

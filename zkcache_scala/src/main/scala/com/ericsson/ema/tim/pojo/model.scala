@@ -4,26 +4,18 @@ package com.ericsson.ema.tim.pojo
 /**
   * Created by eqinson on 2017/5/8.
   */
-class NameType(var theName: String, var theType: String) {
+case class NameType(theName: String, theType: String) {
 	override def toString: String = "NameType{" + "name='" + theName + '\'' + ", type='" + theType + '\'' + '}'
 }
 
 class TableTuple(theName: String, theType: String) extends NameType(theName: String, theType: String) {
-	private var tuples: List[NameType] = _
-
-	def getTuples: List[NameType] = {
-		if (tuples == null)
-			tuples = List[NameType]()
-		tuples
-	}
+	var tuples: List[NameType] = List[NameType]()
 
 	override def toString: String = {
-		super.toString + "\n" +
-			"TableTuple{" + "tuples=" + tuples.map(_ + "\n").reduce(_ + "\n" + _)
-		+'}'
+		super.toString + "\n" + "TableTuple{" + "tuples=" + tuples.map(_.toString + "\n").reduce(_ + "\n" + _) + '}'
 	}
 }
 
-class Table(val name: String, val records: TableTuple) {
+case class Table(name: String, records: TableTuple) {
 	override def toString: String = "Table{" + "name='" + name + '\'' + ", records=" + records + '}'
 }

@@ -16,12 +16,8 @@ class MethodInvocationCache {
 
 	private val getterStore = new ConcurrentHashMap[MethodInvocationKey, Method]
 	private val setterStore = new ConcurrentHashMap[MethodInvocationKey, Method]
-	private val lock: ReentrantLock = new ReentrantLock
+	private val lock = new ReentrantLock
 
-	object AccessType extends Enumeration {
-		type AccessType = Value
-		val GET, SET = Value
-	}
 
 	def cleanup(): Unit = {
 		getterStore.clear()
@@ -61,11 +57,15 @@ class MethodInvocationCache {
 		cached
 	}
 
-	class MethodInvocationKey private(val lookupClass: Class[_], val methodName: String) {
-		private[this] var hashcode: Int = _
+	class MethodInvocationKey private() {
+		private[MethodInvocationKey] var hashcode: Int = _
+		private[MethodInvocationKey] var lookupClass: Class[_] = _
+		private[MethodInvocationKey] var methodName: String = _
 
-		def this(lookupClass: Class[_], methodName: String) {
-			this(lookupClass, methodName)
+		def this(lookupClass: Class[_], methodName: String) = {
+			this()
+			this.lookupClass = lookupClass
+			this.methodName = methodName
 			var result = if (lookupClass != null) lookupClass.hashCode else 0
 			result = 31 * result + (if (methodName != null) methodName.hashCode else 0)
 			this.hashcode = result
@@ -82,4 +82,9 @@ class MethodInvocationCache {
 		override def hashCode: Int = hashCode
 	}
 
+}
+
+object AccessType extends Enumeration {
+	type AccessType = Value
+	val GET, SET = Value
 }

@@ -5,12 +5,12 @@ import org.slf4j.LoggerFactory
 /**
   * Created by eqinson on 2017/5/8.
   */
-class JavaBeanReflectionProxy(val instance: Object) {
+class JavaBeanReflectionProxy(val instance: Any) {
 	private val TUPLENAME = "records"
 	private val LOGGER = LoggerFactory.getLogger(classOf[JavaBeanReflectionProxy])
-	private var tupleListType: Class[_] = _
+	var tupleListType: Class[_] = _
 
-	def init(instance: Any): Unit = {
+	def init(): Unit = {
 		val tupleClassName = instance.getClass.getName + "Data"
 		//must use same classloader as PojoGen
 		val cl = Thread.currentThread.getContextClassLoader

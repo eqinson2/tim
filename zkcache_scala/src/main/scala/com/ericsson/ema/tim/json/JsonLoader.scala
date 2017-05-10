@@ -78,8 +78,8 @@ class JsonLoader(var tableName: String) {
 
 		parseTableHeader(table)
 		if (LOGGER.isDebugEnabled) {
-			tableHeaderIndexMap.foreach(kv => LOGGER.debug("key : {}, value: {}", kv._1, kv._2))
-			tableMetadata.foreach(kv => LOGGER.debug("key : {}, value: {}", kv._1, kv._2))
+			tableHeaderIndexMap.foreach(kv => LOGGER.debug("key : {}, value: {}", kv._1, kv._2: Any))
+			tableMetadata.foreach(kv => LOGGER.debug("key : {}, value: {}", kv._1, kv._2: Any))
 		}
 
 		parseTableContent(table)

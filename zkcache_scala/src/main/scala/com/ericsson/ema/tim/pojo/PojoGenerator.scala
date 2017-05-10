@@ -15,18 +15,19 @@ object PojoGenerator {
 	private val typesForTuple = Map("int" -> classOf[Integer], "string" -> classOf[String], "bool" -> classOf[Boolean])
 
 	private def generateTupleClz(table: Table): Unit = {
-		val props = table.records.getTuples.foldLeft(mutable.LinkedHashMap[String, Class[_]]())((m, n) => {
-			m.put(n.theName, typesForTuple.getOrElse(n.theType, Class[Nothing]))
+		val props = table.records.tuples.foldLeft(mutable.LinkedHashMap[String, Class[_]]())((m, n) => {
+			m.put(n.theName, typesForTuple.getOrElse(n.theType, throw new RuntimeException("bug: illegal typesForTuple")))
 			m
 		})
 
 		if (LOGGER.isDebugEnabled)
-			props.foreach(kv => LOGGER.debug("name: {}, type: {}", kv._1, kv._2))
+			props.foreach(kv => LOGGER.debug("name: {}, type: {}", kv._1, kv._2: Any))
 
 		val classToGen = pojoPkg + "." + table.name + "Data"
-		try
-			val clz: Class[_] = PojoGenUtil.generatePojo(classToGen, props)
+		try {
+			val clz = PojoGenUtil.generatePojo(classToGen, props)
 			Thread.currentThread.setContextClassLoader(clz.getClassLoader)
+		}
 		catch {
 			case e@(_: NotFoundException | _: CannotCompileException) =>
 				LOGGER.error(e.getMessage)

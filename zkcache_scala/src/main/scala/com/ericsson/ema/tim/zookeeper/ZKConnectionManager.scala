@@ -128,6 +128,7 @@ class ZKConnectionManager {
 				case Event.KeeperState.Disconnected  =>
 					LOGGER.warn("The session [{}] in ZooKeeper has lost its connection", getSessionId)
 					notifyListener(State.DISCONNECTED)
+				case _                               => LOGGER.error("should not happen")
 			}
 		}
 

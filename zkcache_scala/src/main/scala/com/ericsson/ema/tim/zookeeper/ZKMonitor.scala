@@ -1,10 +1,15 @@
 package com.ericsson.ema.tim.zookeeper
 
+import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.locks.ReentrantLock
 
 import com.ericsson.ema.tim.dml.TableInfoMap.tableInfoMap
+import com.ericsson.ema.tim.json.JsonLoader
+import com.ericsson.ema.tim.lock.ZKCacheRWLockMap.zkCacheRWLock
+import com.ericsson.ema.tim.pojo.{NameType, PojoGenerator, Table, TableTuple}
 import com.ericsson.ema.tim.reflection.Tab2ClzMap.tab2ClzMap
 import com.ericsson.ema.tim.reflection.Tab2MethodInvocationCacheMap.tab2MethodInvocationCacheMap
+import com.ericsson.ema.tim.reflection.TabDataLoader
 import com.ericsson.ema.tim.zookeeper.MetaDataRegistry.metaDataRegistry
 import com.ericsson.ema.tim.zookeeper.State.State
 import com.ericsson.util.SystemPropertyUtil
@@ -79,7 +84,70 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 	}
 
 	private def doLoad(tableName: String, content: String): Unit = {
+		//1. load json
+		val jloader = loadJsonFromRawData(content, tableName)
+		var needToInvalidateInvocationCache = false
+		if (!isMetaDataDefined(jloader)) { //metadata change-> function need re-reflection
+			tab2ClzMap.unRegister(tableName)
+			needToInvalidateInvocationCache = true
+			//2. parse json cache and build as datamodel
+			val table = buildDataModelFromJson(jloader)
+			//3. generate pojo class
+			PojoGenerator.generateTableClz(table)
+			updateMetaData(jloader)
+		}
+		//4. load data by reflection, and the new data will replace old one.
+		val obj = loadDataByReflection(jloader)
 
+		//8. registerOrReplace tab into global registry
+		LOGGER.info("=====================registerOrReplace {}=====================", tableName)
+		//force original loaded obj and its classloader to gc
+		zkCacheRWLock.writeLockTable(tableName)
+		try {
+			if (needToInvalidateInvocationCache)
+				tab2MethodInvocationCacheMap.unRegister(tableName)
+			tableInfoMap.registerOrReplace(tableName, jloader.tableMetadata.toMap, obj)
+		} finally {
+			zkCacheRWLock.writeUnLockTable(tableName)
+		}
+	}
+
+	private def loadJsonFromRawData(json: String, tableName: String) = {
+		val jloader = new JsonLoader(tableName)
+		jloader.loadJsonFromString(json)
+		jloader
+	}
+
+	private def buildDataModelFromJson(jloader: JsonLoader) = {
+		LOGGER.info("=====================parse json=====================")
+		val tt = new TableTuple("records", jloader.tableName + "Data")
+		tt.tuples = jloader.tableMetadata.foldRight(List[NameType]())((kv, list) => NameType(kv._1, kv._2) :: list)
+		val table = Table(jloader.tableName, tt)
+		LOGGER.debug("Table structure: {}", table)
+		table
+	}
+
+	private def loadDataByReflection(jloader: JsonLoader) = {
+		LOGGER.info("=====================load data by reflection=====================")
+		val classToLoad = PojoGenerator.pojoPkg + "." + jloader.tableName
+		try
+			TabDataLoader(classToLoad, jloader).loadData
+		catch {
+			case e@(_: ClassNotFoundException | _: IllegalAccessException | _: InstantiationException | _: InvocationTargetException) =>
+				e.printStackTrace()
+				throw new RuntimeException(e.getMessage)
+		}
+	}
+
+	private def isMetaDataDefined(jsonLoader: JsonLoader) = {
+		val defined = metaDataRegistry.isRegistered(jsonLoader.tableName, jsonLoader.tableMetadata.toMap)
+		if (defined) LOGGER.info("Metadata already defined for {}, skip regenerating javabean...", jsonLoader.tableName)
+		else LOGGER.info("Metadata NOT defined for {}", jsonLoader.tableName)
+		defined
+	}
+
+	private def updateMetaData(jsonLoader: JsonLoader) = {
+		metaDataRegistry.registerMetaData(jsonLoader.tableName, jsonLoader.tableMetadata.toMap)
 	}
 
 	private def getDataZKNoException(zooKeeper: ZooKeeper, zkTarget: String, watcher: Watcher) =
@@ -141,12 +209,11 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 				case State.DISCONNECTED                  => Option(nodeChildCache).foreach(_.stop)
 			}
 		}
-
 	}
 
 	private class NodeWatcher private[zookeeper](val zkNodeName: String) extends Watcher {
 		override def process(event: WatchedEvent): Unit = {
-			if (event.getType eq Watcher.Event.EventType.NodeDataChanged)
+			if (event.getType == Watcher.Event.EventType.NodeDataChanged)
 				loadOneTable(zkNodeName)
 		}
 	}

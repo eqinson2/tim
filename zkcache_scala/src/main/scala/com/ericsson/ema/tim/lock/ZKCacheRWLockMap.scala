@@ -52,19 +52,19 @@ class ZKCacheRWLockMap private() {
 private class ZKCacheRWLock {
 	final private val rwl = new ReentrantReadWriteLock
 
-	private[ZKCacheRWLockMap] def readLock() = {
+	private[lock] def readLock() = {
 		rwl.readLock.lock()
 	}
 
-	private[ZKCacheRWLockMap] def readUnlock() = {
+	private[lock] def readUnlock() = {
 		rwl.readLock.unlock()
 	}
 
-	private[ZKCacheRWLockMap] def writeLock() = {
+	private[lock] def writeLock() = {
 		rwl.writeLock.lock()
 	}
 
-	private[ZKCacheRWLockMap] def writeUnlock() = {
+	private[lock] def writeUnlock() = {
 		rwl.writeLock.unlock()
 	}
 }

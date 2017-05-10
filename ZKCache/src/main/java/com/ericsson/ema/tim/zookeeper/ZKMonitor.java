@@ -83,8 +83,8 @@ public class ZKMonitor {
     private synchronized void loadOneTable(String zkNodeName) {
         LOGGER.debug("Start to load data for node {}", zkNodeName);
         byte[] rawData = zkConnectionManager.getConnection()
-            .map(zkConnection -> getDataZKNoException(zkConnection, zkRootPath + "/" + zkNodeName, new NodeWatcher
-                (zkNodeName))).orElse(new byte[0]);
+                .map(zkConnection -> getDataZKNoException(zkConnection, zkRootPath + "/" + zkNodeName, new NodeWatcher
+                        (zkNodeName))).orElse(new byte[0]);
 
         if (rawData.length == 0) {
             LOGGER.error("Failed to loadOneTable for node {}", zkNodeName);
@@ -129,7 +129,7 @@ public class ZKMonitor {
         boolean defined = metaDataRegistry.isRegistered(jsonLoader.getTableName(), jsonLoader.getTableMetadata());
         if (defined) {
             LOGGER.info("Metadata already defined for {}, skip regenerating javabean...", jsonLoader
-                .getTableName());
+                    .getTableName());
         } else {
             LOGGER.info("Metadata NOT defined for {}", jsonLoader.getTableName());
         }
@@ -148,7 +148,6 @@ public class ZKMonitor {
 
     private Table buildDataModelFromJson(JsonLoader jloader) {
         LOGGER.info("=====================parse json=====================");
-
         TableTuple tt = new TableTuple("records", jloader.getTableName() + "Data");
         jloader.getTableMetadata().forEach((k, v) -> tt.getTuples().add(new NameType(k, v)));
         Table table = new Table(jloader.getTableName(), tt);
@@ -164,7 +163,7 @@ public class ZKMonitor {
         try {
             return tabL.loadData();
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |
-            InvocationTargetException e) {
+                InvocationTargetException e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
@@ -196,7 +195,7 @@ public class ZKMonitor {
 
     private ZooKeeper getConnection() throws KeeperException.ConnectionLossException {
         return zkConnectionManager.getConnection().orElseThrow(KeeperException
-            .ConnectionLossException::new);
+                .ConnectionLossException::new);
     }
 
     private byte[] getDataZKNoException(ZooKeeper zooKeeper, String zkTarget, Watcher watcher) {
