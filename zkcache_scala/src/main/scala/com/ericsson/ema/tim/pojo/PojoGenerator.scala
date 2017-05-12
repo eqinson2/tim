@@ -12,7 +12,8 @@ import scala.collection.mutable
 object PojoGenerator {
 	val pojoPkg: String = PojoGenerator.getClass.getPackage.getName
 	private val LOGGER = LoggerFactory.getLogger(PojoGenerator.getClass)
-	private val typesForTuple = Map("int" -> classOf[Integer], "string" -> classOf[String], "bool" -> classOf[Boolean])
+
+	private val typesForTuple = Map("int" -> classOf[Integer], "string" -> classOf[String], "bool" -> classOf[java.lang.Boolean])
 
 	private def generateTupleClz(table: Table): Unit = {
 		val props = table.records.tuples.foldLeft(mutable.LinkedHashMap[String, Class[_]]())((m, n) => {
@@ -37,7 +38,7 @@ object PojoGenerator {
 
 	def generateTableClz(table: Table): Unit = {
 		generateTupleClz(table)
-		val props = Map("records" -> classOf[List[_]])
+		val props = Map("records" -> classOf[java.util.List[_]])
 		val classTOGen: String = pojoPkg + "." + table.name
 		try
 			PojoGenUtil.generateListPojo(classTOGen, props)

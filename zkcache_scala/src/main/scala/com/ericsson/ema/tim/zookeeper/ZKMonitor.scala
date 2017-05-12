@@ -83,7 +83,7 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 		}
 	}
 
-	private def doLoad(tableName: String, content: String): Unit = {
+	def doLoad(tableName: String, content: String): Unit = {
 		//1. load json
 		val jloader = loadJsonFromRawData(content, tableName)
 		var needToInvalidateInvocationCache = false

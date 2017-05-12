@@ -69,13 +69,13 @@ object PojoGenUtil {
 
 	private def generateSetter(declaringClass: CtClass, fieldName: String, fieldClass: Class[_]): CtMethod = {
 		val setterName = "set" + fieldName.substring(0, 1).toUpperCase + fieldName.substring(1)
-		val sb = String.format("public void %s( %s %s) { this.%s = %s; }", setterName, fieldClass.getName, fieldName, fieldName, fieldName)
+		val sb = String.format("public void %s(%s %s) { this.%s = %s; }", setterName, fieldClass.getName, fieldName, fieldName, fieldName)
 		LOGGER.debug("generateSetter:{}", sb)
 		CtMethod.make(sb, declaringClass)
 	}
 
 	private def generateToString(declaringClass: CtClass): CtMethod = {
-		val toStringBody = declaringClass.getDeclaredFields.toList.map("\"{\"+String.valueOf(" + _.getName + ")+\"}\"").foldLeft("return ")(_ + " + " + _) + ";"
+		val toStringBody = declaringClass.getDeclaredFields.toList.map("\"{\"+String.valueOf(" + _.getName + ")+\"}\"").foldLeft("return \"\"")(_ + " + " + _) + ";"
 		val sb = String.format("public String toString() { %s }", toStringBody)
 		LOGGER.debug("generateToString:{}", sb)
 		CtMethod.make(sb, declaringClass)

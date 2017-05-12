@@ -79,7 +79,7 @@ class MethodInvocationCache {
 			}
 		}
 
-		override def hashCode: Int = hashCode
+		override def hashCode(): Int = this.hashcode
 	}
 
 }
