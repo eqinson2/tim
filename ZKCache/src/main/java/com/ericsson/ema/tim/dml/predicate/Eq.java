@@ -22,7 +22,7 @@ public class Eq extends AbstractPredicate implements Predicate {
     @Override
     public boolean eval(Object tuple) {
         if (this.valueToComp == null)
-            return true;
+            return false;
 
         Object fieldVal = getFiledValFromTupleByName(tuple);
         Map<String, String> metadata = getSelector().getContext().getTableMetadata();

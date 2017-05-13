@@ -3,6 +3,8 @@ package com.ericsson.ema.tim.dml
 
 import java.lang.reflect.InvocationTargetException
 
+import com.ericsson.ema.tim.dml.group.GroupBy
+import com.ericsson.ema.tim.dml.order.{ChainableOrderings, OrderBy}
 import com.ericsson.ema.tim.dml.predicate.Predicate
 import com.ericsson.ema.tim.exception.DmlBadSyntaxException
 import com.ericsson.ema.tim.lock.ZKCacheRWLockMap.zkCacheRWLock
@@ -18,13 +20,14 @@ object Select {
 }
 
 
-class Select private() extends Selector {
+class Select private() extends Selector with ChainableOrderings {
+	private val TUPLE_FIELD: String = "records"
 	var selectedFields: List[String] = List[String]()
 	var context: TableInfoContext = _
 	var methodInvocationCache: MethodInvocationCache = _
-
-	private val TUPLE_FIELD: String = "records"
 	private var predicates = List[Predicate]()
+	private var orderBys = List[OrderBy]()
+	private var groupBy: GroupBy = _
 	private var limit = Integer.MIN_VALUE
 	private var skip = Integer.MIN_VALUE
 	private var table: String = _
@@ -47,15 +50,13 @@ class Select private() extends Selector {
 	}
 
 	override def limit(limit: Int): Selector = {
-		if (limit <= 0)
-			throw DmlBadSyntaxException("Error: limit must be > 0")
+		if (limit <= 0) throw DmlBadSyntaxException("Error: limit must be > 0")
 		this.limit = limit
 		this
 	}
 
 	override def skip(skip: Int): Selector = {
-		if (skip <= 0)
-			throw DmlBadSyntaxException("Error: skip must be > 0")
+		if (skip <= 0) throw DmlBadSyntaxException("Error: skip must be > 0")
 		this.skip = skip
 		this
 	}
@@ -71,12 +72,56 @@ class Select private() extends Selector {
 		if (selectedFields.isEmpty)
 			throw DmlBadSyntaxException("Error: Must use execute if full fields are to be selected")
 
-		var selectedResult = List[List[Object]]()
-		for (obj <- internalExecute()) {
-			val list = selectedFields.map(invokeGetByReflection(obj, _)).foldRight(List[Object]())(_ :: _)
-			selectedResult :+= list
+		for (obj <- internalExecute())
+			yield selectedFields.map(invokeGetByReflection(obj, _)).foldRight(List[Object]())(_ :: _)
+	}
+
+	/**
+	  * rwlock table when internalExecute
+	  *
+	  * @return List of tuple
+	  */
+	private def internalExecute(): List[Object] = {
+		zkCacheRWLock.readLockTable(table)
+		try {
+			initExecuteContext()
+			var result = records
+			if (predicates.nonEmpty)
+				result = records.filter(internalPredicate())
+			if (orderBys.nonEmpty)
+				result = result.sorted(orderBys.map(_.ordering()).reduce(_ thenOrdering _))
+			if (skip > 0)
+				result = result.drop(skip)
+			if (limit > 0)
+				result = result.take(limit)
+			result
+		} finally {
+			zkCacheRWLock.readUnLockTable(table)
 		}
-		selectedResult
+	}
+
+	private def initExecuteContext(): Unit = {
+		this.context = TableInfoMap.tableInfoMap.lookup(table).getOrElse(throw DmlBadSyntaxException("Error: Selecting a " + "non-existing table:" + table))
+		this.methodInvocationCache = Tab2MethodInvocationCacheMap.tab2MethodInvocationCacheMap.lookup(table)
+		//it is safe because records must be List according to JavaBean definition
+		val tupleField = invokeGetByReflection(context.tabledata, TUPLE_FIELD)
+		assert(tupleField.isInstanceOf[java.util.List[Object]])
+		import scala.collection.JavaConversions._
+		this.records = tupleField.asInstanceOf[java.util.List[Object]].toList
+	}
+
+	private def invokeGetByReflection(obj: Object, wantedField: String): Object = {
+		val getter = methodInvocationCache.get(obj.getClass, wantedField, AccessType.GET)
+		try
+			getter.invoke(obj)
+		catch {
+			case e@(_: IllegalAccessException | _: InvocationTargetException) =>
+				throw DmlBadSyntaxException(e.getMessage) //should never happen
+		}
+	}
+
+	private def internalPredicate(): Object => Boolean = {
+		r: Object => predicates.map(_.eval(r)).reduce(_ && _)
 	}
 
 	override def count(): Long = {
@@ -105,47 +150,44 @@ class Select private() extends Selector {
 		}
 	}
 
-	private def initExecuteContext(): Unit = {
-		this.context = TableInfoMap.tableInfoMap.lookup(table).getOrElse(throw DmlBadSyntaxException("Error: Selecting a " + "non-existing table:" + table))
-		this.methodInvocationCache = Tab2MethodInvocationCacheMap.tab2MethodInvocationCacheMap.lookup(table)
-		//it is safe because records must be List according to JavaBean definition
-		val tupleField = invokeGetByReflection(context.tabledata, TUPLE_FIELD)
-		assert(tupleField.isInstanceOf[java.util.List[Object]])
-		import scala.collection.JavaConversions._
-		this.records = tupleField.asInstanceOf[java.util.List[Object]].toList
+	override def orderBy(field: String, asc: String = "asc"): Selector = {
+		val o = OrderBy(field, asc)
+		this.orderBys :+= o
+		o.selector = this
+		this
 	}
 
-	/**
-	  * rwlock table when internalExecute
-	  *
-	  * @return List of tuple
-	  */
-	private def internalExecute(): List[Object] = {
+	override def groupBy(field: String): Selector = {
+		if (groupBy != null)
+			throw DmlBadSyntaxException("Error: only support one groupBy Clause")
+
+		val g = new GroupBy(field)
+		this.groupBy = g
+		g.selector = this
+		this
+	}
+
+	override def collectByGroup(): Map[Object, List[Object]] = {
 		zkCacheRWLock.readLockTable(table)
 		try {
 			initExecuteContext()
-			var result = records.filter(internalPredicate())
-			if (skip > 0) result = result.drop(skip)
-			if (limit > 0) result = result.take(limit)
-			result
+			var result = records
+			if (predicates.nonEmpty)
+				result = records.filter(internalPredicate())
+			if (orderBys.nonEmpty)
+				result = result.sorted(orderBys.map(_.ordering()).reduce(_ thenOrdering _))
+			if (skip > 0)
+				result = result.drop(skip)
+			if (limit > 0)
+				result = result.take(limit)
+			if (groupBy != null)
+				result.groupBy(groupBy.keyExtractor())
+			else throw DmlBadSyntaxException("Error: must specify groupBy when using collectByGroup.")
 		} finally {
 			zkCacheRWLock.readUnLockTable(table)
 		}
 	}
-
-	private def invokeGetByReflection(obj: Object, wantedField: String): Object = {
-		val getter = methodInvocationCache.get(obj.getClass, wantedField, AccessType.GET)
-		try
-			getter.invoke(obj)
-		catch {
-			case e@(_: IllegalAccessException | _: InvocationTargetException) =>
-				throw DmlBadSyntaxException(e.getMessage) //should never happen
-
-		}
-	}
-
-	private def internalPredicate(): Object => Boolean = {
-		r: Object => predicates.map(_.eval(r)).reduce(_ && _)
-	}
 }
+
+
 

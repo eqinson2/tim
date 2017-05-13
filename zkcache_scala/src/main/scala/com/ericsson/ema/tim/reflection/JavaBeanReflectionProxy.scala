@@ -13,8 +13,8 @@ class JavaBeanReflectionProxy(val instance: Any) {
 	def init(): Unit = {
 		val tupleClassName = instance.getClass.getName + "Data"
 		//must use same classloader as PojoGen
-		val cl = Thread.currentThread.getContextClassLoader
-		this.tupleListType = if (cl != null) cl.loadClass(tupleClassName) else Class.forName(tupleClassName)
+		val cl = instance.getClass.getClassLoader
+		this.tupleListType = if (cl ne null) cl.loadClass(tupleClassName) else Class.forName(tupleClassName)
 	}
 
 }

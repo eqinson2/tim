@@ -52,7 +52,7 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 
 	private def loadAllTable(): Unit = {
 		unloadAllTable()
-		var children: List[String] = null
+		var children: List[String] = Nil
 		try {
 			nodeChildCache = new NodeChildCache(getConnection, zkRootPath, new NodeChildrenChangedListenerImpl)
 			import scala.collection.JavaConversions._

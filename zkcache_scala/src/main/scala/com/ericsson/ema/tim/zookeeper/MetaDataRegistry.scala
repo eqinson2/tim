@@ -19,7 +19,7 @@ class MetaDataRegistry {
 	}
 
 	def isRegistered(tableName: String, other: Map[String, String]): Boolean = {
-		registry.exists(_._1 == tableName) && registry.get(tableName) == other
+		registry.exists(_._1 == tableName) && registry(tableName) == other
 	}
 
 }

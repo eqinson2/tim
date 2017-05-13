@@ -50,6 +50,7 @@ class TabDataLoader(val classToLoad: String, val jloader: JsonLoader) {
 				tuple = proxy.tupleListType.newInstance.asInstanceOf[Object]
 			catch {
 				case e@(_: InstantiationException | _: IllegalAccessException) =>
+					LOGGER.error(e.getMessage)
 					e.printStackTrace()
 			}
 			records.add(tuple)
@@ -57,7 +58,9 @@ class TabDataLoader(val classToLoad: String, val jloader: JsonLoader) {
 				try
 					fillinField(tuple, field, realFieldVal(field))
 				catch {
-					case e: Exception => e.printStackTrace()
+					case e: Exception =>
+						LOGGER.error(e.getMessage)
+						e.printStackTrace()
 				}
 			}
 		}

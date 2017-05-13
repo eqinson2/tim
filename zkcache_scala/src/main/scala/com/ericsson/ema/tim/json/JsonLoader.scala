@@ -27,7 +27,7 @@ class JsonLoader(var tableName: String) {
 	private val TABLE_CONTENT_TAG = "Content"
 	private val TABLE_TUPLE_TAG = "Tuple"
 	private val PATTERN = "\\{[\\w ]+\\}".r
-	private val tableHeaderIndexMap: mutable.Map[Integer, TypeInfo] = mutable.Map[Integer, TypeInfo]()
+	private var tableHeaderIndexMap: Map[Integer, TypeInfo] = Map[Integer, TypeInfo]()
 
 	val tableMetadata: mutable.Map[String, String] = mutable.LinkedHashMap[String, String]()
 	var tupleList: List[List[FieldInfo]] = List[List[FieldInfo]]()
@@ -45,7 +45,9 @@ class JsonLoader(var tableName: String) {
 			while (keys.hasNext) {
 				val key: String = keys.next
 				arr.getJSONObject(i).get(key) match {
-					case t: String => tableHeaderIndexMap.put(i, TypeInfo(key, t)); tableMetadata.put(key, t)
+					case t: String =>
+						tableHeaderIndexMap += (Integer.valueOf(i) -> TypeInfo(key, t))
+						tableMetadata.put(key, t)
 					case _         => throw new ClassCastException("bug: illegal type...")
 				}
 			}

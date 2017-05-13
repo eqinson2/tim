@@ -35,42 +35,42 @@ public class ExceptionTest {
 
     @Test(expected = DmlNoSuchFieldException.class)
     public void testGroupByDmlNoSuchFieldException() throws Exception {
-        LOGGER.info("=====================select some data for testing groupby=====================");
+        LOGGER.info("=====================select some data for testing DmlNoSuchFieldException =====================");
         select().from(tableName).
-            where(eq("name1", "eqinson")).where(like("job", "engineer"))
-            .where(range("age", 1, 10)).groupBy("name").collectByGroup();
+                where(eq("name1", "eqinson")).where(like("job", "engineer"))
+                .where(range("age", 1, 10)).groupBy("name").collectByGroup();
 
         select().from(tableName).
-            where(like("name", "eqinson")).where(like("job1", "engineer"))
-            .where(range("age", 1, 10)).groupBy("name").collectByGroup();
+                where(like("name", "eqinson")).where(like("job1", "engineer"))
+                .where(range("age", 1, 10)).groupBy("name").collectByGroup();
 
         select().from(tableName).
-            where(like("name", "eqinson")).where(like("job", "engineer"))
-            .where(range("age1", 1, 10)).groupBy("name").collectByGroup();
+                where(like("name", "eqinson")).where(like("job", "engineer"))
+                .where(range("age1", 1, 10)).groupBy("name").collectByGroup();
 
         select().from(tableName).
-            where(like("name", "eqinson")).where(unlike("job1", "engineer"))
-            .where(range("age", 1, 10)).groupBy("name").collectByGroup();
+                where(like("name", "eqinson")).where(unlike("job1", "engineer"))
+                .where(range("age", 1, 10)).groupBy("name").collectByGroup();
 
         select().from(tableName).
-            where(like("name", "eqinson")).where(unlike("job", "engineer"))
-            .where(gt("age1", 1)).groupBy("name").collectByGroup();
+                where(like("name", "eqinson")).where(unlike("job", "engineer"))
+                .where(gt("age1", 1)).groupBy("name").collectByGroup();
 
         select().from(tableName).
-            where(like("name", "eqinson")).where(unlike("job", "engineer"))
-            .where(lt("age1", 10)).groupBy("name").collectByGroup();
+                where(like("name", "eqinson")).where(unlike("job", "engineer"))
+                .where(lt("age1", 10)).groupBy("name").collectByGroup();
 
         select().from(tableName).
-            where(like("name", "eqinson")).where(like("job", "engineer"))
-            .where(range("age", 1, 10)).groupBy("name1").collectByGroup();
+                where(like("name", "eqinson")).where(like("job", "engineer"))
+                .where(range("age", 1, 10)).groupBy("name1").collectByGroup();
     }
 
     @Test(expected = DmlBadSyntaxException.class)
     public void testGroupByDmlBadSyntaxException() {
         LOGGER.info("=====================select some data for testing groupby with " +
-            "DmlBadSyntaxException=====================");
+                "DmlBadSyntaxException=====================");
         select().from(tableName).
-            where(like("name", "eqinson")).where(like("job", "engineer"))
-            .where(range("age", 1, 6)).groupBy("name").groupBy("age").collectByGroup();
+                where(like("name", "eqinson")).where(like("job", "engineer"))
+                .where(range("age", 1, 6)).groupBy("name").groupBy("age").collectByGroup();
     }
 }

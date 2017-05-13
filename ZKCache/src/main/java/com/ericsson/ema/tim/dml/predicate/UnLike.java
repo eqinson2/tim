@@ -7,8 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by eqinson on 2017/4/23.
@@ -27,7 +25,7 @@ public class UnLike extends AbstractPredicate implements Predicate {
     @Override
     public boolean eval(Object tuple) {
         if (this.valueToComp == null)
-            return false;
+            return true;
 
         Object fieldVal = getFiledValFromTupleByName(tuple);
         Map<String, String> metadata = getSelector().getContext().getTableMetadata();

@@ -1,23 +1,15 @@
 package com.ericsson.ema.tim.dml
 
 import com.ericsson.ema.tim.dml.predicate.Eq
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import org.slf4j.LoggerFactory
 
 /**
   * Created by eqinson on 2017/5/12.
   */
-class EqTest extends FlatSpec with Matchers with BeforeAndAfterAll {
+class EqTest extends TestBase {
 	private val LOGGER = LoggerFactory.getLogger(classOf[EqTest])
 
-	private val tableName = "Eqinson"
-	private val testFile = "test.json"
-
-	override def beforeAll(): Unit = {
-		TestUtil.init(testFile, tableName)
-	}
-
-	"EqTest" should "pass" in {
+	"Test1" should "pass eq test" in {
 		LOGGER.info("=====================select some data for testing eq=====================")
 		var result: List[Object] = Select().from(tableName).where(Eq("name", "eqinson1")).where(Eq("age", "1")).collect()
 		result.foreach(println)
@@ -41,5 +33,4 @@ class EqTest extends FlatSpec with Matchers with BeforeAndAfterAll {
 		TestUtil.printResult(result2)
 		println
 	}
-
 }

@@ -83,7 +83,7 @@ public class ZKClient implements Watcher {
         try {
             if (zk.exists("/zookeeper", false) != null) {
                 LOGGER.debug("create ZooKeeper Client Success! connectString", PropertiesDynLoading
-                    .connectString);
+                        .connectString);
                 LOGGER.debug(" ZooKeeper client state [{}]", zk.getState());
                 return true;
             }
@@ -290,7 +290,7 @@ public class ZKClient implements Watcher {
         List<ACL> listAcls = new ArrayList<ACL>(3);
         try {
             Id id = new Id(PropertiesDynLoading.authScheme,
-                DigestAuthenticationProvider.generateDigest(PropertiesDynLoading.accessKey));
+                    DigestAuthenticationProvider.generateDigest(PropertiesDynLoading.accessKey));
             ACL acl = new ACL(Perms.CREATE, id);
             listAcls.add(acl);
 
@@ -305,7 +305,7 @@ public class ZKClient implements Watcher {
         List<ACL> listAcls = new ArrayList<ACL>(3);
         try {
             Id id = new Id(PropertiesDynLoading.authScheme,
-                DigestAuthenticationProvider.generateDigest(PropertiesDynLoading.accessKey));
+                    DigestAuthenticationProvider.generateDigest(PropertiesDynLoading.accessKey));
             ACL acl = new ACL(Perms.ALL, id);
             listAcls.add(acl);
 

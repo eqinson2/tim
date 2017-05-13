@@ -21,4 +21,11 @@ trait Selector {
 	def count(): Long
 
 	def exists(): Boolean
+
+	def orderBy(field: String, asc: String = "asc"): Selector
+
+	def groupBy(field: String): Selector
+
+	def collectByGroup(): Map[Object, List[Object]]
+
 }

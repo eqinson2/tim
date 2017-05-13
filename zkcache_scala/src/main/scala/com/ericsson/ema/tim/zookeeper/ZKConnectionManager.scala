@@ -144,8 +144,12 @@ class ZKConnectionManager {
 }
 
 object ZKConnectionManager {
-	def apply(): ZKConnectionManager = {
-		new ZKConnectionManager()
+	var instance: ZKConnectionManager = _
+
+	def apply(): ZKConnectionManager = synchronized {
+		if (instance == null)
+			instance = new ZKConnectionManager
+		instance
 	}
 }
 
