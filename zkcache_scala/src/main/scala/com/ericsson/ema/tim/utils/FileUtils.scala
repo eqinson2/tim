@@ -7,8 +7,6 @@ import java.nio.file.Path
   */
 object FileUtils {
 	def readFile(path: Path): String = {
-		//		val encoded = Files.readAllBytes(path)
-		//		new String(encoded, Charset.defaultCharset)
 		val source = scala.io.Source.fromFile(path.toUri, "UTF-8")
 		val file = source.mkString
 		source.close()

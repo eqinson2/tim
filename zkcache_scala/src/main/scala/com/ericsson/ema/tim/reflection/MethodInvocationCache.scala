@@ -58,9 +58,9 @@ class MethodInvocationCache {
 	}
 
 	class MethodInvocationKey private() {
-		private[MethodInvocationKey] var hashcode: Int = _
-		private[MethodInvocationKey] var lookupClass: Class[_] = _
-		private[MethodInvocationKey] var methodName: String = _
+		private var hashcode: Int = _
+		private var lookupClass: Class[_] = _
+		private var methodName: String = _
 
 		def this(lookupClass: Class[_], methodName: String) = {
 			this()

@@ -46,7 +46,6 @@ class ZKCacheRWLockMap private() {
 			override def apply(input: From): To = scalafunction(input)
 		}
 	}
-
 }
 
 private class ZKCacheRWLock {

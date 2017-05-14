@@ -18,7 +18,7 @@ class TabDataLoader(val classToLoad: String, val jloader: JsonLoader) {
 	private val LOGGER = LoggerFactory.getLogger(classOf[TabDataLoader])
 
 	private val TUPLE_FIELD = "records"
-	private var cache = tab2MethodInvocationCacheMap.lookup(jloader.tableName)
+	private val cache = tab2MethodInvocationCacheMap.lookup(jloader.tableName)
 
 	private def realFieldVal(field: FieldInfo): Object = {
 		var value: Object = null
@@ -37,32 +37,14 @@ class TabDataLoader(val classToLoad: String, val jloader: JsonLoader) {
 		val clz = tab2ClzMap.lookup(jloader.tableName).getOrElse(Thread.currentThread.getContextClassLoader.loadClass(classToLoad))
 		tab2ClzMap.register(jloader.tableName, clz)
 		val obj = clz.newInstance
-		val proxy = new JavaBeanReflectionProxy(obj)
-		proxy.init()
-
-		LOGGER.debug("init getTupleListType: {}", proxy.tupleListType)
+		val tupleListType = loadTupleClz(obj)
+		LOGGER.debug("init {}", tupleListType)
 		val getter = cache.get(clz, TUPLE_FIELD, AccessType.GET)
 		val records = getter.invoke(obj).asInstanceOf[java.util.List[Object]]
-		//it will create a list internally
 		for (row <- jloader.tupleList) {
-			var tuple: Object = null
-			try
-				tuple = proxy.tupleListType.newInstance.asInstanceOf[Object]
-			catch {
-				case e@(_: InstantiationException | _: IllegalAccessException) =>
-					LOGGER.error(e.getMessage)
-					e.printStackTrace()
-			}
+			val tuple = tupleListType.newInstance.asInstanceOf[Object]
+			row.foreach(field => fillinField(tuple, field, realFieldVal(field)))
 			records.add(tuple)
-			for (field <- row) {
-				try
-					fillinField(tuple, field, realFieldVal(field))
-				catch {
-					case e: Exception =>
-						LOGGER.error(e.getMessage)
-						e.printStackTrace()
-				}
-			}
 		}
 		obj.asInstanceOf[Object]
 	}
@@ -80,14 +62,18 @@ class TabDataLoader(val classToLoad: String, val jloader: JsonLoader) {
 					case e@(_: IllegalAccessException | _: InvocationTargetException) =>
 						e.printStackTrace()
 						LOGGER.error("error fillinField : {}", field)
-					case e: IllegalArgumentException                                  =>
-						e.printStackTrace()
-						LOGGER.error("IllegalArgumentException fillinField : {}", field)
 				}
 			case _      =>
 				LOGGER.error("should not happen.")
 				throw new RuntimeException("bug in fillinField...")
 		}
+	}
+
+	private def loadTupleClz(instance: Any): Class[_] = {
+		val tupleClassName = instance.getClass.getName + "Data"
+		//must use same classloader as PojoGen
+		LOGGER.info("=====================load class: {}=====================", tupleClassName)
+		instance.getClass.getClassLoader.loadClass(tupleClassName)
 	}
 }
 

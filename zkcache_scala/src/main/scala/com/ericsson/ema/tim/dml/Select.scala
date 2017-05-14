@@ -65,15 +65,25 @@ class Select private() extends Selector with ChainableOrderings {
 		if (selectedFields.nonEmpty)
 			throw DmlBadSyntaxException("Error: must use collectBySelectFields if some fields are to be selected")
 
-		internalExecute()
+		zkCacheRWLock.readLockTable(table)
+		try {
+			internalExecute()
+		} finally {
+			zkCacheRWLock.readUnLockTable(table)
+		}
 	}
 
 	override def collectBySelectFields(): List[List[Object]] = {
 		if (selectedFields.isEmpty)
 			throw DmlBadSyntaxException("Error: Must use execute if full fields are to be selected")
 
-		for (obj <- internalExecute())
-			yield selectedFields.map(invokeGetByReflection(obj, _)).foldRight(List[Object]())(_ :: _)
+		zkCacheRWLock.readLockTable(table)
+		try {
+			for (obj <- internalExecute())
+				yield selectedFields.map(invokeGetByReflection(obj, _)).foldRight(List[Object]())(_ :: _)
+		} finally {
+			zkCacheRWLock.readUnLockTable(table)
+		}
 	}
 
 	/**
@@ -82,22 +92,17 @@ class Select private() extends Selector with ChainableOrderings {
 	  * @return List of tuple
 	  */
 	private def internalExecute(): List[Object] = {
-		zkCacheRWLock.readLockTable(table)
-		try {
-			initExecuteContext()
-			var result = records
-			if (predicates.nonEmpty)
-				result = records.filter(internalPredicate())
-			if (orderBys.nonEmpty)
-				result = result.sorted(orderBys.map(_.ordering()).reduce(_ thenOrdering _))
-			if (skip > 0)
-				result = result.drop(skip)
-			if (limit > 0)
-				result = result.take(limit)
-			result
-		} finally {
-			zkCacheRWLock.readUnLockTable(table)
-		}
+		initExecuteContext()
+		var result = records
+		if (predicates.nonEmpty)
+			result = records.filter(internalPredicate())
+		if (orderBys.nonEmpty)
+			result = result.sorted(orderBys.map(_.ordering()).reduce(_ thenOrdering _))
+		if (skip > 0)
+			result = result.drop(skip)
+		if (limit > 0)
+			result = result.take(limit)
+		result
 	}
 
 	private def initExecuteContext(): Unit = {
@@ -158,7 +163,7 @@ class Select private() extends Selector with ChainableOrderings {
 	}
 
 	override def groupBy(field: String): Selector = {
-		if (groupBy != null)
+		if (groupBy ne null)
 			throw DmlBadSyntaxException("Error: only support one groupBy Clause")
 
 		val g = new GroupBy(field)
@@ -170,19 +175,10 @@ class Select private() extends Selector with ChainableOrderings {
 	override def collectByGroup(): Map[Object, List[Object]] = {
 		zkCacheRWLock.readLockTable(table)
 		try {
-			initExecuteContext()
-			var result = records
-			if (predicates.nonEmpty)
-				result = records.filter(internalPredicate())
-			if (orderBys.nonEmpty)
-				result = result.sorted(orderBys.map(_.ordering()).reduce(_ thenOrdering _))
-			if (skip > 0)
-				result = result.drop(skip)
-			if (limit > 0)
-				result = result.take(limit)
-			if (groupBy != null)
-				result.groupBy(groupBy.keyExtractor())
-			else throw DmlBadSyntaxException("Error: must specify groupBy when using collectByGroup.")
+			if (groupBy ne null)
+				collect().groupBy(groupBy.keyExtractor())
+			else
+				throw DmlBadSyntaxException("Error: must specify groupBy when using collectByGroup.")
 		} finally {
 			zkCacheRWLock.readUnLockTable(table)
 		}
