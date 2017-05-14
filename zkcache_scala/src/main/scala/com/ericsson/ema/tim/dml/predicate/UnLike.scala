@@ -19,9 +19,9 @@ class UnLike private(override val field: String, override val valueToComp: Objec
 		fieldType match {
 			case Some(DataTypes.String) =>
 				!fieldVal.asInstanceOf[String].matches(valueToComp.asInstanceOf[String])
-			case Some(_)                =>
-				LOGGER.error("unsupported data type: {},{}", field, fieldType: Any)
-				throw DmlBadSyntaxException("unsupported data type: " + field + "," + fieldType)
+			case Some(other)            =>
+				LOGGER.error("unsupported data type: {},{}", field, other: Any)
+				throw DmlBadSyntaxException("unsupported data type: " + field + "," + other)
 			case None                   => throw DmlNoSuchFieldException(field)
 		}
 	}

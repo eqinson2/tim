@@ -20,9 +20,9 @@ class BiggerThan private(override val field: String, override val valueToComp: O
 		fieldType match {
 			case Some(DataTypes.Int) =>
 				fieldVal.asInstanceOf[Integer].compareTo(valueToComp.asInstanceOf[Integer]) > 0
-			case Some(_)             =>
-				LOGGER.error("unsupported data type: {},{}", field, fieldType: Any)
-				throw DmlBadSyntaxException("unsupported data type: " + field + "," + fieldType)
+			case Some(other)         =>
+				LOGGER.error("unsupported data type: {},{}", field, other: Any)
+				throw DmlBadSyntaxException("unsupported data type: " + field + "," + other)
 			case None                => throw DmlNoSuchFieldException(field)
 		}
 	}

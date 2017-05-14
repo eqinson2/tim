@@ -1,0 +1,39 @@
+init:
+    val zkm = ZKConnectionManager()
+	zkm.init()
+	val zkMonitor = new ZKMonitor(zkm)
+	zkMonitor.start()
+
+destroy:
+	zkMonitor.stop()
+	zkm.destroy()
+	
+internal mechanism:
+	1. load data in json format from znode for each table if there is configuration change triggered from GUI (the callback is implemented through zookeeper watcher mechanism, referring https://zookeeper.apache.org/doc/r3.4.5/zookeeperProgrammers.html for details), or the server is just started up, or the zookeeper client is reconnected to server.
+	2. if table metadata (data inside Header tag) has not changed, then directly jump to step 5, otherwise go to step 3.
+	3. parse json formatted data and build it as internal data model.
+	4. generate POJO byte codes on the fly with opensource tool(javaassit) based on the internal data model. if the operation is to update the existing data model(e.g. change table schema), the bytecode will be overwritten.
+	5. populate the actual data(data inside Content tag) into POJO generated in previous steps using reflection.
+	
+supported clauses:
+    Eq: test if two value equals
+    UnEq: test if two value not equals
+    Like: test if left field matches give regex, only support string type
+    UnLike: test if left field not matches give regex, only support string type
+    BiggerThan: test if left field > right oper, only support int type
+    LessThan: test if left field < right oper, only support int type
+    Range:  test if left field in range of [from, to), only support int type
+    orderBy: order by given field, either asc(default) or desc and support cascading
+    groupBy: group by given field, and not support cascading and field select
+    limit: only select first n limit element
+    skip: skip first n element
+    count: find number of matches.
+    exists: find if there is any match.
+
+supported collect operation:
+    List[Object] collect();
+    List[List[Object]] collectBySelectFields();
+    Map[Object, List[Object]] collectByGroup();
+
+API usage example:
+    refer to scala unit test cases

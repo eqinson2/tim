@@ -24,9 +24,9 @@ class Eq private(override val field: String, override val valueToComp: Object) e
 				Integer.valueOf(this.valueToComp.asInstanceOf[String]) == fieldVal.asInstanceOf[Integer]
 			case Some(DataTypes.Boolean) =>
 				java.lang.Boolean.valueOf(this.valueToComp.asInstanceOf[String]) == fieldVal.asInstanceOf[java.lang.Boolean]
-			case Some(_)                 =>
-				LOGGER.error("unsupported data type: {},{}", field, fieldType: Any)
-				throw DmlBadSyntaxException("unsupported data type: " + field + "," + fieldType)
+			case Some(other)             =>
+				LOGGER.error("bug: unsupported data type: {},{}", field, other: Any)
+				throw DmlBadSyntaxException("unsupported data type: " + field + "," + other)
 			case None                    => throw DmlNoSuchFieldException(field)
 		}
 	}

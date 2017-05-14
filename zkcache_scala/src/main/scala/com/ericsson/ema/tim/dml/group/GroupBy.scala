@@ -18,9 +18,9 @@ class GroupBy(private val field: String) extends SelectClause {
 		selector.context.tableMetadata.get(field) match {
 			case Some(DataTypes.String) | Some(DataTypes.Int) | Some(DataTypes.Boolean) =>
 				o: Object => getFiledValFromTupleByName(o)
-			case Some(otherType)                                                        =>
-				LOGGER.error("unsupported data type: {},{}", field, otherType: Any)
-				throw DmlBadSyntaxException("Error: unsupported data type: " + field + "," + otherType)
+			case Some(other)                                                            =>
+				LOGGER.error("unsupported data type: {},{}", field, other: Any)
+				throw DmlBadSyntaxException("Error: unsupported data type: " + field + "," + other)
 			case None                                                                   =>
 				throw DmlNoSuchFieldException(field)
 

@@ -18,9 +18,9 @@ class Range private(override val field: String, val from: Int, val to: Int) exte
 		fieldType match {
 			case Some(DataTypes.Int) =>
 				fieldVal.asInstanceOf[Integer].compareTo(from) >= 0 && fieldVal.asInstanceOf[Integer].compareTo(to) < 0
-			case Some(_)             =>
-				LOGGER.error("unsupported data type: {},{}", field, fieldType: Any)
-				throw DmlBadSyntaxException("unsupported data type: " + field + "," + fieldType)
+			case Some(other)         =>
+				LOGGER.error("unsupported data type: {},{}", field, other: Any)
+				throw DmlBadSyntaxException("unsupported data type: " + field + "," + other)
 			case None                => throw DmlNoSuchFieldException(field)
 		}
 	}

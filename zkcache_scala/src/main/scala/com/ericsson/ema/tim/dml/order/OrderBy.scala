@@ -66,9 +66,9 @@ class OrderBy private(private val field: String, val reversed: Boolean) extends 
 					}
 				}
 
-			case Some(otherType) =>
-				LOGGER.error("unsupported data type: {},{}", field, otherType: Any)
-				throw DmlBadSyntaxException("Error: unsupported data type: " + field + "," + otherType)
+			case Some(other) =>
+				LOGGER.error("bug: unsupported data type: {},{}", field, other: Any)
+				throw DmlBadSyntaxException("Error: unsupported data type: " + field + "," + other)
 
 			case None => throw DmlNoSuchFieldException(field)
 		}
