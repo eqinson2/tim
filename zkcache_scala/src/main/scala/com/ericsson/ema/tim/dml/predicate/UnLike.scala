@@ -11,8 +11,8 @@ class UnLike private(override val field: String, override val valueToComp: Objec
 	private val LOGGER = LoggerFactory.getLogger(classOf[UnLike])
 
 	override def eval(tuple: Object): Boolean = {
-		if (this.valueToComp eq null)
-			return true
+		if (Option(this.valueToComp).isEmpty)
+			return false
 
 		val fieldVal: Object = getFiledValFromTupleByName(tuple)
 		val fieldType = selector.context.tableMetadata.get(field)

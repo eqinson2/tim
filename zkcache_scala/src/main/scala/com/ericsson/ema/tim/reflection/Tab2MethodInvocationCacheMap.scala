@@ -31,8 +31,11 @@ object Tab2MethodInvocationCacheMap {
 	var instance: Tab2MethodInvocationCacheMap = _
 
 	def tab2MethodInvocationCacheMap: Tab2MethodInvocationCacheMap = synchronized {
-		if (instance == null)
-			instance = new Tab2MethodInvocationCacheMap
-		instance
+		Option(instance) match {
+			case None    =>
+				instance = new Tab2MethodInvocationCacheMap
+				instance
+			case Some(_) => instance
+		}
 	}
 }

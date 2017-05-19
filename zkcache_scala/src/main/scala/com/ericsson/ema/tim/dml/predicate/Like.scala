@@ -11,7 +11,7 @@ class Like private(override val field: String, override val valueToComp: Object)
 	private val LOGGER = LoggerFactory.getLogger(classOf[Like])
 
 	override def eval(tuple: Object): Boolean = {
-		if (this.valueToComp eq null)
+		if (Option(this.valueToComp).isEmpty)
 			return false
 
 		val fieldVal: Object = getFiledValFromTupleByName(tuple)

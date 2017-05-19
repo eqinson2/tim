@@ -28,8 +28,11 @@ object MetaDataRegistry {
 	var instance: MetaDataRegistry = _
 
 	def metaDataRegistry: MetaDataRegistry = synchronized {
-		if (instance == null)
-			instance = new MetaDataRegistry
-		instance
+		Option(instance) match {
+			case None    =>
+				instance = new MetaDataRegistry
+				instance
+			case Some(_) => instance
+		}
 	}
 }

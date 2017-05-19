@@ -12,7 +12,7 @@ class BiggerThan private(override val field: String, override val valueToComp: O
 	private val LOGGER = LoggerFactory.getLogger(classOf[BiggerThan])
 
 	override def eval(tuple: Object): Boolean = {
-		if (this.valueToComp eq null)
+		if (Option(this.valueToComp).isEmpty)
 			return false
 
 		val fieldVal: Object = getFiledValFromTupleByName(tuple)

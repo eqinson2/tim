@@ -25,9 +25,12 @@ object Tab2ClzMap {
 	var instance: Tab2ClzMap = _
 
 	def tab2ClzMap: Tab2ClzMap = synchronized {
-		if (instance == null)
-			instance = new Tab2ClzMap
-		instance
+		Option(instance) match {
+			case None    =>
+				instance = new Tab2ClzMap
+				instance
+			case Some(_) => instance
+		}
 	}
 }
 

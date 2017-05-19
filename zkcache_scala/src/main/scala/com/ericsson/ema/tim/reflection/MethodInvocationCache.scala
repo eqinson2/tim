@@ -1,6 +1,6 @@
 package com.ericsson.ema.tim.reflection
 
-import java.beans.{IntrospectionException, Introspector}
+import java.beans.Introspector
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
@@ -35,26 +35,19 @@ class MethodInvocationCache {
 	def get(clz: Class[_], field: String, accessType: AccessType.AccessType): Method = {
 		val key = new MethodInvocationKey(clz, field)
 		val store = if (accessType == AccessType.GET) getterStore else setterStore
-		var cached = store.get(key)
-		if (cached == null) {
-			lock.lock()
-			try {
-				cached = store.get(key)
-				if (cached == null) {
-					try
-						cached = lookup(clz, field)
-					catch {
-						case e: IntrospectionException =>
-							LOGGER.error(e.getMessage)
-							throw new RuntimeException(e)
-					}
+		Option(store.get(key)) match {
+			case Some(cached) => cached
+			case None         =>
+				lock.lock()
+				try {
+					val cached = lookup(clz, field)
 					store.put(key, cached)
+					cached
 				}
-			} finally {
-				lock.unlock()
-			}
+				finally {
+					lock.unlock()
+				}
 		}
-		cached
 	}
 
 	class MethodInvocationKey private() {
@@ -66,15 +59,24 @@ class MethodInvocationCache {
 			this()
 			this.lookupClass = lookupClass
 			this.methodName = methodName
-			var result = if (lookupClass != null) lookupClass.hashCode else 0
-			result = 31 * result + (if (methodName != null) methodName.hashCode else 0)
+
+			var result = Option(lookupClass) match {
+				case Some(clz) => clz.hashCode()
+				case None      => 0
+			}
+			result = 31 * result + {
+				Option(methodName) match {
+					case Some(m) => m.hashCode()
+					case None    => 0
+				}
+			}
 			this.hashcode = result
 		}
 
 		override def equals(o: Any): Boolean = {
 			o match {
 				case that: MethodInvocationKey => (this eq that) ||
-					(lookupClass eq that.lookupClass) && (methodName == that.methodName)
+					(lookupClass == that.lookupClass) && (methodName == that.methodName)
 				case _                         => false
 			}
 		}

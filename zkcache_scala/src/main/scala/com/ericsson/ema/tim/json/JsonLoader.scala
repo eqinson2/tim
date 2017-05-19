@@ -75,7 +75,7 @@ class JsonLoader(var tableName: String) {
 	def loadJsonFromString(jsonStr: String): Unit = {
 		val obj = new JSONObject(jsonStr)
 		val table = obj.getJSONObject(TABLE_TAG)
-		if (tableName eq null)
+		if (Option(tableName).isEmpty)
 			tableName = table.getString(ID_TAG)
 
 		parseTableHeader(table)

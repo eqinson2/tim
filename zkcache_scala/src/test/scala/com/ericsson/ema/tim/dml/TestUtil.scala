@@ -12,7 +12,7 @@ import com.ericsson.ema.tim.zookeeper.ZKMonitor
 object TestUtil {
 	def init(testFile: String, tableName: String): Unit = {
 		val url = Thread.currentThread.getContextClassLoader.getResource(testFile)
-		if (url != null) {
+		if (Option(url).isDefined) {
 			val zm = new ZKMonitor(null)
 			zm.doLoad(tableName, FileUtils.readFile(Paths.get(url.toURI)))
 		}
@@ -31,7 +31,7 @@ object TestUtil {
 
 	def printResultGroup(mapRes: Map[Object, List[Object]]): Unit = {
 		mapRes.foreach(kv => {
-			if (kv._2 != null) {
+			if (Option(kv._2).isDefined) {
 				val row = kv._2.asInstanceOf[List[Object]]
 				row.foreach((r: Object) => print(r + "   "))
 			}

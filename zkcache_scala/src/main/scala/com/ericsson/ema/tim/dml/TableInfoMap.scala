@@ -25,9 +25,12 @@ object TableInfoMap {
 	var instance: TableInfoMap = _
 
 	def tableInfoMap: TableInfoMap = synchronized {
-		if (instance == null)
-			instance = new TableInfoMap
-		instance
+		Option(instance) match {
+			case None    =>
+				instance = new TableInfoMap
+				instance
+			case Some(_) => instance
+		}
 	}
 }
 

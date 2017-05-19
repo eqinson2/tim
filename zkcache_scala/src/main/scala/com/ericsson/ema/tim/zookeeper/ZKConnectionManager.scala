@@ -147,9 +147,12 @@ object ZKConnectionManager {
 	var instance: ZKConnectionManager = _
 
 	def apply(): ZKConnectionManager = synchronized {
-		if (instance == null)
-			instance = new ZKConnectionManager
-		instance
+		Option(instance) match {
+			case None    =>
+				instance = new ZKConnectionManager
+				instance
+			case Some(_) => instance
+		}
 	}
 }
 

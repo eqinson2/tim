@@ -87,7 +87,7 @@ object PojoGenUtil {
 
 	private def makeClass(className: String) = {
 		val pool = ClassPool.getDefault
-		if (pool.getOrNull(className) eq null)
+		if (Option(pool.getOrNull(className)).isEmpty)
 			pool.makeClass(className)
 		else {
 			val ccOld = pool.get(className)

@@ -10,9 +10,12 @@ object ZKCacheRWLockMap {
 	private var instance: ZKCacheRWLockMap = _
 
 	def zkCacheRWLock: ZKCacheRWLockMap = synchronized {
-		if (instance == null)
-			instance = new ZKCacheRWLockMap
-		instance
+		Option(instance) match {
+			case None    =>
+				instance = new ZKCacheRWLockMap
+				instance
+			case Some(_) => instance
+		}
 	}
 }
 

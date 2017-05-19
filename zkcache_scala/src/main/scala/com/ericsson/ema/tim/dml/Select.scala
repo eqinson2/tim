@@ -163,22 +163,23 @@ class Select private() extends Selector with ChainableOrderings {
 	}
 
 	override def groupBy(field: String): Selector = {
-		if (groupBy ne null)
-			throw DmlBadSyntaxException("Error: only support one groupBy Clause")
-
-		val g = new GroupBy(field)
-		this.groupBy = g
-		g.selector = this
-		this
+		Option(groupBy) match {
+			case None    =>
+				val g = new GroupBy(field)
+				this.groupBy = g
+				g.selector = this
+				this
+			case Some(_) => throw DmlBadSyntaxException("Error: only support one groupBy Clause")
+		}
 	}
 
 	override def collectByGroup(): Map[Object, List[Object]] = {
 		zkCacheRWLock.readLockTable(table)
 		try {
-			if (groupBy ne null)
-				collect().groupBy(groupBy.keyExtractor())
-			else
-				throw DmlBadSyntaxException("Error: must specify groupBy when using collectByGroup.")
+			Option(groupBy) match {
+				case Some(_) => collect().groupBy(groupBy.keyExtractor())
+				case None    => throw DmlBadSyntaxException("Error: must specify groupBy when using collectByGroup.")
+			}
 		} finally {
 			zkCacheRWLock.readUnLockTable(table)
 		}

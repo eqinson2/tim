@@ -21,7 +21,6 @@ class TabDataLoader(val classToLoad: String, val jloader: JsonLoader) {
 	private val cache = tab2MethodInvocationCacheMap.lookup(jloader.tableName)
 
 	private def realFieldVal(field: FieldInfo): Object = {
-		var value: Object = null
 		field.fieldType match {
 			case DataTypes.String  => field.fieldValue
 			case DataTypes.Int     => java.lang.Integer.valueOf(field.fieldValue)
