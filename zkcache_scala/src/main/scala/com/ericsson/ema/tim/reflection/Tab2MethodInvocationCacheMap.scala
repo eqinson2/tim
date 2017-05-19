@@ -28,14 +28,7 @@ class Tab2MethodInvocationCacheMap {
 }
 
 object Tab2MethodInvocationCacheMap {
-	var instance: Tab2MethodInvocationCacheMap = _
+	var instance: Tab2MethodInvocationCacheMap = new Tab2MethodInvocationCacheMap
 
-	def tab2MethodInvocationCacheMap: Tab2MethodInvocationCacheMap = synchronized {
-		Option(instance) match {
-			case None    =>
-				instance = new Tab2MethodInvocationCacheMap
-				instance
-			case Some(_) => instance
-		}
-	}
+	def apply(): Tab2MethodInvocationCacheMap = instance
 }

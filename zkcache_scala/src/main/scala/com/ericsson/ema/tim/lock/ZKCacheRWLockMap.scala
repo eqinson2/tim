@@ -7,16 +7,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
   * Created by eqinson on 2017/5/5.
   */
 object ZKCacheRWLockMap {
-	private var instance: ZKCacheRWLockMap = _
+	private var instance: ZKCacheRWLockMap = new ZKCacheRWLockMap
 
-	def zkCacheRWLock: ZKCacheRWLockMap = synchronized {
-		Option(instance) match {
-			case None    =>
-				instance = new ZKCacheRWLockMap
-				instance
-			case Some(_) => instance
-		}
-	}
+	def zkCacheRWLock: ZKCacheRWLockMap = instance
 }
 
 class ZKCacheRWLockMap private() {

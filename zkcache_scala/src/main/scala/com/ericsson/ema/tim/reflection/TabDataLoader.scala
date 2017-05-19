@@ -7,8 +7,6 @@ import java.lang.reflect.InvocationTargetException
 import com.ericsson.ema.tim.dml.DataTypes
 import com.ericsson.ema.tim.exception.DmlNoSuchFieldException
 import com.ericsson.ema.tim.json.{FieldInfo, JsonLoader}
-import com.ericsson.ema.tim.reflection.Tab2ClzMap.tab2ClzMap
-import com.ericsson.ema.tim.reflection.Tab2MethodInvocationCacheMap.tab2MethodInvocationCacheMap
 import org.slf4j.LoggerFactory
 
 /**
@@ -18,7 +16,7 @@ class TabDataLoader(val classToLoad: String, val jloader: JsonLoader) {
 	private val LOGGER = LoggerFactory.getLogger(classOf[TabDataLoader])
 
 	private val TUPLE_FIELD = "records"
-	private val cache = tab2MethodInvocationCacheMap.lookup(jloader.tableName)
+	private val cache = Tab2MethodInvocationCacheMap().lookup(jloader.tableName)
 
 	private def realFieldVal(field: FieldInfo): Object = {
 		field.fieldType match {
@@ -33,8 +31,8 @@ class TabDataLoader(val classToLoad: String, val jloader: JsonLoader) {
 
 	def loadData: Object = {
 		LOGGER.info("=====================reflect class: {}=====================", classToLoad)
-		val clz = tab2ClzMap.lookup(jloader.tableName).getOrElse(Thread.currentThread.getContextClassLoader.loadClass(classToLoad))
-		tab2ClzMap.register(jloader.tableName, clz)
+		val clz = Tab2ClzMap().lookup(jloader.tableName).getOrElse(Thread.currentThread.getContextClassLoader.loadClass(classToLoad))
+		Tab2ClzMap().register(jloader.tableName, clz)
 		val obj = clz.newInstance
 		val tupleListType = loadTupleClz(obj)
 		LOGGER.debug("init {}", tupleListType)

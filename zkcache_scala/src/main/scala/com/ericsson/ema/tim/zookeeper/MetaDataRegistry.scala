@@ -25,14 +25,7 @@ class MetaDataRegistry {
 }
 
 object MetaDataRegistry {
-	var instance: MetaDataRegistry = _
+	var instance: MetaDataRegistry = new MetaDataRegistry
 
-	def metaDataRegistry: MetaDataRegistry = synchronized {
-		Option(instance) match {
-			case None    =>
-				instance = new MetaDataRegistry
-				instance
-			case Some(_) => instance
-		}
-	}
+	def apply(): MetaDataRegistry = instance
 }

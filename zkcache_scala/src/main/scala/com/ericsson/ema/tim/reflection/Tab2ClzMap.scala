@@ -22,15 +22,8 @@ class Tab2ClzMap {
 }
 
 object Tab2ClzMap {
-	var instance: Tab2ClzMap = _
+	var instance: Tab2ClzMap = new Tab2ClzMap
 
-	def tab2ClzMap: Tab2ClzMap = synchronized {
-		Option(instance) match {
-			case None    =>
-				instance = new Tab2ClzMap
-				instance
-			case Some(_) => instance
-		}
-	}
+	def apply(): Tab2ClzMap = instance
 }
 

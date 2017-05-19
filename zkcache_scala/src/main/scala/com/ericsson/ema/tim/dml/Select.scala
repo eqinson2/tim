@@ -106,8 +106,8 @@ class Select private() extends Selector with ChainableOrderings {
 	}
 
 	private def initExecuteContext(): Unit = {
-		this.context = TableInfoMap.tableInfoMap.lookup(table).getOrElse(throw DmlBadSyntaxException("Error: Selecting a " + "non-existing table:" + table))
-		this.methodInvocationCache = Tab2MethodInvocationCacheMap.tab2MethodInvocationCacheMap.lookup(table)
+		this.context = TableInfoMap().lookup(table).getOrElse(throw DmlBadSyntaxException("Error: Selecting a " + "non-existing table:" + table))
+		this.methodInvocationCache = Tab2MethodInvocationCacheMap().lookup(table)
 		//it is safe because records must be List according to JavaBean definition
 		val tupleField = invokeGetByReflection(context.tabledata, TUPLE_FIELD)
 		assert(tupleField.isInstanceOf[java.util.List[Object]])

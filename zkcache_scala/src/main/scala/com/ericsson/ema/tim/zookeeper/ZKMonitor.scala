@@ -3,14 +3,11 @@ package com.ericsson.ema.tim.zookeeper
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.locks.ReentrantLock
 
-import com.ericsson.ema.tim.dml.TableInfoMap.tableInfoMap
+import com.ericsson.ema.tim.dml.TableInfoMap
 import com.ericsson.ema.tim.json.JsonLoader
 import com.ericsson.ema.tim.lock.ZKCacheRWLockMap.zkCacheRWLock
 import com.ericsson.ema.tim.pojo.{NameType, PojoGenerator, Table, TableTuple}
-import com.ericsson.ema.tim.reflection.Tab2ClzMap.tab2ClzMap
-import com.ericsson.ema.tim.reflection.Tab2MethodInvocationCacheMap.tab2MethodInvocationCacheMap
-import com.ericsson.ema.tim.reflection.TabDataLoader
-import com.ericsson.ema.tim.zookeeper.MetaDataRegistry.metaDataRegistry
+import com.ericsson.ema.tim.reflection.{Tab2ClzMap, Tab2MethodInvocationCacheMap, TabDataLoader}
 import com.ericsson.ema.tim.zookeeper.State.State
 import com.ericsson.util.SystemPropertyUtil
 import com.ericsson.zookeeper.{NodeChildCache, NodeChildrenChangedListener, ZooKeeperUtil}
@@ -88,7 +85,7 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 		val jloader = loadJsonFromRawData(content, tableName)
 		var needToInvalidateInvocationCache = false
 		if (!isMetaDataDefined(jloader)) { //metadata change-> function need re-reflection
-			tab2ClzMap.unRegister(tableName)
+			Tab2ClzMap().unRegister(tableName)
 			needToInvalidateInvocationCache = true
 			//2. parse json cache and build as datamodel
 			val table = buildDataModelFromJson(jloader)
@@ -105,8 +102,8 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 		zkCacheRWLock.writeLockTable(tableName)
 		try {
 			if (needToInvalidateInvocationCache)
-				tab2MethodInvocationCacheMap.unRegister(tableName)
-			tableInfoMap.registerOrReplace(tableName, jloader.tableMetadata.toMap, obj)
+				Tab2MethodInvocationCacheMap().unRegister(tableName)
+			TableInfoMap().registerOrReplace(tableName, jloader.tableMetadata.toMap, obj)
 		} finally {
 			zkCacheRWLock.writeUnLockTable(tableName)
 		}
@@ -140,14 +137,14 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 	}
 
 	private def isMetaDataDefined(jsonLoader: JsonLoader) = {
-		val defined = metaDataRegistry.isRegistered(jsonLoader.tableName, jsonLoader.tableMetadata.toMap)
+		val defined = MetaDataRegistry().isRegistered(jsonLoader.tableName, jsonLoader.tableMetadata.toMap)
 		if (defined) LOGGER.info("Metadata already defined for {}, skip regenerating javabean...", jsonLoader.tableName)
 		else LOGGER.info("Metadata NOT defined for {}", jsonLoader.tableName)
 		defined
 	}
 
 	private def updateMetaData(jsonLoader: JsonLoader) = {
-		metaDataRegistry.registerMetaData(jsonLoader.tableName, jsonLoader.tableMetadata.toMap)
+		MetaDataRegistry().registerMetaData(jsonLoader.tableName, jsonLoader.tableMetadata.toMap)
 	}
 
 	private def getDataZKNoException(zooKeeper: ZooKeeper, zkTarget: String, watcher: Watcher) =
@@ -163,18 +160,18 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 
 	private def unloadAllTable() = {
 		LOGGER.info("=====================unregister all table=====================")
-		metaDataRegistry.clear()
-		tableInfoMap.clear()
-		tab2MethodInvocationCacheMap.clear()
-		tab2ClzMap.clear()
+		MetaDataRegistry().clear()
+		TableInfoMap().clear()
+		Tab2MethodInvocationCacheMap().clear()
+		Tab2ClzMap().clear()
 	}
 
 	private def unloadOneTable(zkNodeName: String) = {
 		LOGGER.info("=====================registerOrReplace {}=====================", zkNodeName)
-		metaDataRegistry.unregisterMetaData(zkNodeName)
-		tableInfoMap.unregister(zkNodeName)
-		tab2MethodInvocationCacheMap.unRegister(zkNodeName)
-		tab2ClzMap.unRegister(zkNodeName)
+		MetaDataRegistry().unregisterMetaData(zkNodeName)
+		TableInfoMap().unregister(zkNodeName)
+		Tab2MethodInvocationCacheMap().unRegister(zkNodeName)
+		Tab2ClzMap().unRegister(zkNodeName)
 	}
 
 	private def childrenAdded(children: List[String]): Unit = {

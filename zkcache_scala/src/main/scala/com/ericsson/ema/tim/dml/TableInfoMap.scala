@@ -22,16 +22,9 @@ class TableInfoMap {
 }
 
 object TableInfoMap {
-	var instance: TableInfoMap = _
+	var instance: TableInfoMap = new TableInfoMap
 
-	def tableInfoMap: TableInfoMap = synchronized {
-		Option(instance) match {
-			case None    =>
-				instance = new TableInfoMap
-				instance
-			case Some(_) => instance
-		}
-	}
+	def apply(): TableInfoMap = instance
 }
 
 case class TableInfoContext(tabledata: Object, tableMetadata: Map[String, String])
