@@ -5,7 +5,7 @@ package com.ericsson.ema.tim.dml.order
   */
 trait ChainableOrderings {
 
-	class ChainableOrdering[T](val outer: Ordering[T]) {
+	class ChainableOrdering[T](outer: Ordering[T]) {
 		def thenOrdering(next: Ordering[T]): Ordering[T] = new Ordering[T] {
 			def compare(t1: T, t2: T): Int = {
 				val first = outer.compare(t1, t2)

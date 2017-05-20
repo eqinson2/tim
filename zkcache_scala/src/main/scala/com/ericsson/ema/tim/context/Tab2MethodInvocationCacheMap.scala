@@ -6,7 +6,7 @@ import com.ericsson.ema.tim.reflection.MethodInvocationCache
   * Created by eqinson on 2017/5/5.
   */
 class Tab2MethodInvocationCacheMap {
-	private var map = Map[String, MethodInvocationCache]()
+	private[this] var map = Map[String, MethodInvocationCache]()
 
 	def clear(): Unit = {
 		map = Map[String, MethodInvocationCache]()
@@ -30,7 +30,7 @@ class Tab2MethodInvocationCacheMap {
 }
 
 object Tab2MethodInvocationCacheMap {
-	val instance: Tab2MethodInvocationCacheMap = new Tab2MethodInvocationCacheMap
+	private[this] val instance = new Tab2MethodInvocationCacheMap
 
 	def apply(): Tab2MethodInvocationCacheMap = instance
 }

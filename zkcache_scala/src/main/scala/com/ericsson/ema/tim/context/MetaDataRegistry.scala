@@ -4,7 +4,7 @@ package com.ericsson.ema.tim.context
   * Created by eqinson on 2017/5/5.
   */
 class MetaDataRegistry {
-	private var registry = Map[String, Map[String, String]]()
+	private[this] var registry = Map[String, Map[String, String]]()
 
 	def registerMetaData(tableName: String, metadata: Map[String, String]): Unit = {
 		registry += (tableName -> metadata)
@@ -25,7 +25,7 @@ class MetaDataRegistry {
 }
 
 object MetaDataRegistry {
-	val instance: MetaDataRegistry = new MetaDataRegistry
+	private[this] val instance = new MetaDataRegistry
 
 	def apply(): MetaDataRegistry = instance
 }

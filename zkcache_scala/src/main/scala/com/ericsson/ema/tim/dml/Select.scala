@@ -15,16 +15,16 @@ import com.ericsson.ema.tim.reflection.{AccessType, MethodInvocationCache}
   * Created by eqinson on 2017/5/12.
   */
 class Select private() extends Selector with ChainableOrderings {
-	private val TUPLE_FIELD: String = "records"
+	private[this] val TUPLE_FIELD: String = "records"
 
-	private var selectedFields: List[String] = List[String]()
-	private var predicates = List[PredicateClause]()
-	private var orderBys = List[OrderBy]()
-	private var groupBy: GroupBy = _
-	private var limit = Integer.MIN_VALUE
-	private var skip = Integer.MIN_VALUE
-	private var table: String = _
-	private var records: List[Object] = _
+	private[this] var selectedFields: List[String] = List[String]()
+	private[this] var predicates = List[PredicateClause]()
+	private[this] var orderBys = List[OrderBy]()
+	private[this] var groupBy: GroupBy = _
+	private[this] var limit = Integer.MIN_VALUE
+	private[this] var skip = Integer.MIN_VALUE
+	private[this] var table: String = _
+	private[this] var records: List[Object] = _
 
 	var context: TableInfoContext = _
 	var methodInvocationCache: MethodInvocationCache = _
@@ -82,7 +82,7 @@ class Select private() extends Selector with ChainableOrderings {
 		}
 	}
 
-	private def internalExecute(): List[Object] = {
+	private[this] def internalExecute(): List[Object] = {
 		initExecuteContext()
 		var result = records
 		if (predicates.nonEmpty)
@@ -96,7 +96,7 @@ class Select private() extends Selector with ChainableOrderings {
 		result
 	}
 
-	private def initExecuteContext(): Unit = {
+	private[this] def initExecuteContext(): Unit = {
 		this.context = TableInfoMap().lookup(table).getOrElse(throw DmlBadSyntaxException("Error: Selecting a " + "non-existing table:" + table))
 		this.methodInvocationCache = Tab2MethodInvocationCacheMap().lookup(table)
 		//it is safe because records must be List according to JavaBean definition
@@ -105,7 +105,7 @@ class Select private() extends Selector with ChainableOrderings {
 		this.records = tupleField.asInstanceOf[java.util.List[Object]].toList
 	}
 
-	private def invokeGetByReflection(obj: Object, wantedField: String): Object = {
+	private[this] def invokeGetByReflection(obj: Object, wantedField: String): Object = {
 		val getter = methodInvocationCache.get(obj.getClass, wantedField, AccessType.GET)
 		try
 			getter.invoke(obj)
@@ -115,7 +115,7 @@ class Select private() extends Selector with ChainableOrderings {
 		}
 	}
 
-	private def internalPredicate(): Object => Boolean = {
+	private[this] def internalPredicate(): Object => Boolean = {
 		r => predicates.map(_.eval(r)).reduce(_ && _)
 	}
 

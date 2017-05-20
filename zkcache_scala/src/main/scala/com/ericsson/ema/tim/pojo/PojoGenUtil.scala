@@ -11,7 +11,7 @@ import scala.collection.mutable
   * Created by eqinson on 2017/5/8.
   */
 object PojoGenUtil {
-	private val LOGGER = LoggerFactory.getLogger(PojoGenUtil.getClass)
+	private[this] val LOGGER = LoggerFactory.getLogger(PojoGenUtil.getClass)
 
 	def generatePojo(className: String, properties: mutable.Map[String, Class[_]]): Class[_] = {
 		val cc = makeClass(className)
@@ -53,39 +53,39 @@ object PojoGenUtil {
 		cc.toClass(Thread.currentThread.getContextClassLoader)
 	}
 
-	private def generatePlainGetter(declaringClass: CtClass, fieldName: String, fieldClass: Class[_]): CtMethod = {
+	private[this] def generatePlainGetter(declaringClass: CtClass, fieldName: String, fieldClass: Class[_]): CtMethod = {
 		val getterName = "get" + fieldName.substring(0, 1).toUpperCase + fieldName.substring(1)
 		val sb = String.format("public %s %s() { return this.%s; }", fieldClass.getName, getterName, fieldName)
 		LOGGER.debug("generatePlainGetter:{}", sb)
 		CtMethod.make(sb, declaringClass)
 	}
 
-	private def generateListGetter(declaringClass: CtClass, fieldName: String, fieldClass: Class[_]): CtMethod = {
+	private[this] def generateListGetter(declaringClass: CtClass, fieldName: String, fieldClass: Class[_]): CtMethod = {
 		val getterName = "get" + fieldName.substring(0, 1).toUpperCase + fieldName.substring(1)
 		val sb = String.format("public %s %s() { if (%s == null) { %s = new java.util.ArrayList(); } return this.%s; }", fieldClass.getName, getterName, fieldName, fieldName, fieldName)
 		LOGGER.debug("generateListGetter:{}", sb)
 		CtMethod.make(sb, declaringClass)
 	}
 
-	private def generateSetter(declaringClass: CtClass, fieldName: String, fieldClass: Class[_]): CtMethod = {
+	private[this] def generateSetter(declaringClass: CtClass, fieldName: String, fieldClass: Class[_]): CtMethod = {
 		val setterName = "set" + fieldName.substring(0, 1).toUpperCase + fieldName.substring(1)
 		val sb = String.format("public void %s(%s %s) { this.%s = %s; }", setterName, fieldClass.getName, fieldName, fieldName, fieldName)
 		LOGGER.debug("generateSetter:{}", sb)
 		CtMethod.make(sb, declaringClass)
 	}
 
-	private def generateToString(declaringClass: CtClass): CtMethod = {
+	private[this] def generateToString(declaringClass: CtClass): CtMethod = {
 		val toStringBody = declaringClass.getDeclaredFields.toList.map("\"{\"+String.valueOf(" + _.getName + ")+\"}\"").foldLeft("return \"\"")(_ + " + " + _) + ";"
 		val sb = String.format("public String toString() { %s }", toStringBody)
 		LOGGER.debug("generateToString:{}", sb)
 		CtMethod.make(sb, declaringClass)
 	}
 
-	private def resolveCtClass(clazz: Class[_]): CtClass = {
+	private[this] def resolveCtClass(clazz: Class[_]): CtClass = {
 		ClassPool.getDefault.get(clazz.getName)
 	}
 
-	private def makeClass(className: String) = {
+	private[this] def makeClass(className: String) = {
 		val pool = ClassPool.getDefault
 		if (Option(pool.getOrNull(className)).isEmpty)
 			pool.makeClass(className)

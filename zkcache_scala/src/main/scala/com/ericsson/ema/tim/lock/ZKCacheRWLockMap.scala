@@ -7,13 +7,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
   * Created by eqinson on 2017/5/5.
   */
 object ZKCacheRWLockMap {
-	private var instance: ZKCacheRWLockMap = new ZKCacheRWLockMap
+	private[this] val instance = new ZKCacheRWLockMap
 
 	def zkCacheRWLock: ZKCacheRWLockMap = instance
 }
 
 class ZKCacheRWLockMap private() {
-	private val map = new ConcurrentHashMap[String, ZKCacheRWLock]
+	private[this] val map = new ConcurrentHashMap[String, ZKCacheRWLock]
 
 	def readLockTable(table: String): Unit = {
 		map.computeIfAbsent(table, (k: String) => new ZKCacheRWLock).readLock()
@@ -42,24 +42,26 @@ class ZKCacheRWLockMap private() {
 			override def apply(input: From): To = scalafunction(input)
 		}
 	}
+
+	private[this] class ZKCacheRWLock {
+		private[this] val rwl = new ReentrantReadWriteLock
+
+		def readLock(): Unit = {
+			rwl.readLock.lock()
+		}
+
+		def readUnlock(): Unit = {
+			rwl.readLock.unlock()
+		}
+
+		def writeLock(): Unit = {
+			rwl.writeLock.lock()
+		}
+
+		def writeUnlock(): Unit = {
+			rwl.writeLock.unlock()
+		}
+	}
+
 }
 
-private class ZKCacheRWLock {
-	final private val rwl = new ReentrantReadWriteLock
-
-	private[lock] def readLock() = {
-		rwl.readLock.lock()
-	}
-
-	private[lock] def readUnlock() = {
-		rwl.readLock.unlock()
-	}
-
-	private[lock] def writeLock() = {
-		rwl.writeLock.lock()
-	}
-
-	private[lock] def writeUnlock() = {
-		rwl.writeLock.unlock()
-	}
-}

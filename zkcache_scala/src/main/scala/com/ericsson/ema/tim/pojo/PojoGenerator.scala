@@ -10,11 +10,12 @@ import scala.collection.mutable
   * Created by eqinson on 2017/5/8.
   */
 object PojoGenerator {
-	private val LOGGER = LoggerFactory.getLogger(PojoGenerator.getClass)
-	val pojoPkg: String = PojoGenerator.getClass.getPackage.getName
-	private val typesForTuple = Map("int" -> classOf[Integer], "string" -> classOf[String], "bool" -> classOf[java.lang.Boolean])
+	private[this] val LOGGER = LoggerFactory.getLogger(PojoGenerator.getClass)
+	private[this] val typesForTuple = Map("int" -> classOf[Integer], "string" -> classOf[String], "bool" -> classOf[java.lang.Boolean])
 
-	private def generateTupleClz(table: Table): Unit = {
+	val pojoPkg: String = PojoGenerator.getClass.getPackage.getName
+
+	private[this] def generateTupleClz(table: Table): Unit = {
 		val props = table.records.tuples.foldLeft(mutable.LinkedHashMap[String, Class[_]]())((m, n) => {
 			m.put(n.theName, typesForTuple.getOrElse(n.theType, throw new RuntimeException("bug: illegal typesForTuple")))
 			m

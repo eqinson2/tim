@@ -20,17 +20,17 @@ trait ZKConnectionChangeWatcher {
 
 
 class ZKConnectionManager {
-	private val LOGGER = LoggerFactory.getLogger(classOf[ZKConnectionManager])
+	private[this] val LOGGER = LoggerFactory.getLogger(classOf[ZKConnectionManager])
 
-	private val SESSION_TIMEOUT = 6000
-	private var connectStr: String = _
-	private var zooKeeper: ZooKeeper = _
-	private var listeners = List[ZKConnectionChangeWatcher]()
+	private[this] val SESSION_TIMEOUT = 6000
+	private[this] var connectStr: String = _
+	private[this] var zooKeeper: ZooKeeper = _
+	private[this] var listeners = List[ZKConnectionChangeWatcher]()
 
 	@volatile
-	private var waitForReconnect: Boolean = _
-	private var reconnectExecutor: ExecutorService = _
-	private var reconnFuture: Future[_] = _
+	private[this] var waitForReconnect: Boolean = _
+	private[this] var reconnectExecutor: ExecutorService = _
+	private[this] var reconnFuture: Future[_] = _
 
 	try
 		connectStr = SystemPropertyUtil.getAndAssertProperty("com.ericsson.ema.tim.zkconnstr")
@@ -64,7 +64,7 @@ class ZKConnectionManager {
 		})
 	}
 
-	private def connect(): Unit = {
+	private[this] def connect(): Unit = {
 		try {
 			val watcher = new ConnectionWatcher
 			zooKeeper = new ZooKeeper(connectStr, SESSION_TIMEOUT, watcher)
@@ -97,15 +97,15 @@ class ZKConnectionManager {
 		listeners :+= listener
 	}
 
-	private def notifyListener(state: State): Unit = {
+	private[this] def notifyListener(state: State): Unit = {
 		listeners.foreach(_.stateChange(state))
 	}
 
-	private def getSessionId: String = getConnection.map(z => "0x" + java.lang.Long.toHexString(z.getSessionId)).getOrElse("NO-SESSION")
+	private[this] def getSessionId: String = getConnection.map(z => "0x" + java.lang.Long.toHexString(z.getSessionId)).getOrElse("NO-SESSION")
 
-	private class ConnectionWatcher extends Watcher {
-		final private val latch = new CountDownLatch(1)
-		private var connectionHasBeenEstablished = false
+	private[this] class ConnectionWatcher extends Watcher {
+		private[this] val latch = new CountDownLatch(1)
+		private[this] var connectionHasBeenEstablished = false
 
 		override def process(event: WatchedEvent): Unit = {
 			event.getState match {
@@ -141,10 +141,16 @@ class ZKConnectionManager {
 		}
 	}
 
+	private[this] class ZKNamedSequenceThreadFactory(val threadName: String) extends ThreadFactory {
+		private[this] val counter = new AtomicLong(1L)
+
+		override def newThread(runnable: Runnable) = new Thread(runnable, this.threadName + "-" + this.counter.getAndIncrement)
+	}
+
 }
 
 object ZKConnectionManager {
-	var instance: ZKConnectionManager = _
+	private[this] var instance: ZKConnectionManager = _
 
 	def apply(): ZKConnectionManager = synchronized {
 		Option(instance) match {
@@ -157,15 +163,11 @@ object ZKConnectionManager {
 }
 
 object State extends Enumeration {
-	type State = Value
+	private[zookeeper] type State = Value
 	val CONNECTED, RECONNECTED, DISCONNECTED = Value
 }
 
 
-final private class ZKNamedSequenceThreadFactory(val threadName: String) extends ThreadFactory {
-	private val counter = new AtomicLong(1L)
 
-	override def newThread(runnable: Runnable) = new Thread(runnable, this.threadName + "-" + this.counter.getAndIncrement)
-}
 
 

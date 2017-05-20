@@ -11,16 +11,16 @@ import com.ericsson.ema.tim.exception.DmlNoSuchFieldException
   * Created by eqinson on 2017/5/5.
   */
 class MethodInvocationCache {
-	private val getterStore = new ConcurrentHashMap[MethodInvocationKey, Method]
-	private val setterStore = new ConcurrentHashMap[MethodInvocationKey, Method]
-	private val lock = new ReentrantLock
+	private[this] val getterStore = new ConcurrentHashMap[MethodInvocationKey, Method]
+	private[this] val setterStore = new ConcurrentHashMap[MethodInvocationKey, Method]
+	private[this] val lock = new ReentrantLock
 
 	def cleanup(): Unit = {
 		getterStore.clear()
 		setterStore.clear()
 	}
 
-	private def lookup(clz: Class[_], property: String): Method = {
+	private[this] def lookup(clz: Class[_], property: String): Method = {
 		val beanInfo = Introspector.getBeanInfo(clz)
 		beanInfo.getPropertyDescriptors.toList.filter(property == _.getName).map(_.getReadMethod) match {
 			case h :: _ => h
@@ -46,10 +46,10 @@ class MethodInvocationCache {
 		}
 	}
 
-	class MethodInvocationKey(val lookupClass: Class[_], val methodName: String) {
+	private[this] class MethodInvocationKey(val lookupClass: Class[_], val methodName: String) {
 		require(Option(lookupClass).isDefined && Option(methodName).isDefined)
 
-		private val hashcode: Int = 31 * lookupClass.hashCode() + methodName.hashCode
+		private[this] val hashcode: Int = 31 * lookupClass.hashCode() + methodName.hashCode
 
 		override def equals(o: Any): Boolean = {
 			o match {

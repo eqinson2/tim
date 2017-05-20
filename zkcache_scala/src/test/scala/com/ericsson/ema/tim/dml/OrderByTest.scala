@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
   * Created by eqinson on 2017/5/12.
   */
 class OrderByTest extends TestBase {
-	private val LOGGER = LoggerFactory.getLogger(classOf[OrderByTest])
+	private[this] val LOGGER = LoggerFactory.getLogger(classOf[OrderByTest])
 
 	"Test1" should "pass orderby test" in {
 		LOGGER.info("=====================select some data for testing orderby=====================")

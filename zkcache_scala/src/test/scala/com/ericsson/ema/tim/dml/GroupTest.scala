@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
   * Created by eqinson on 2017/5/13.
   */
 class GroupTest extends TestBase {
-	private val LOGGER = LoggerFactory.getLogger(classOf[GroupTest])
+	private[this] val LOGGER = LoggerFactory.getLogger(classOf[GroupTest])
 
 	"Test1" should "pass groupby test" in {
 		LOGGER.info("=====================select some data for testing groupby=====================")

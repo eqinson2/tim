@@ -13,13 +13,13 @@ import org.slf4j.LoggerFactory
 /**
   * Created by eqinson on 2017/5/10.
   */
-class TabDataLoader(private val classToLoad: String, private val jloader: JsonLoader) {
-	private val LOGGER = LoggerFactory.getLogger(classOf[TabDataLoader])
+class TabDataLoader(classToLoad: String, jloader: JsonLoader) {
+	private[this] val LOGGER = LoggerFactory.getLogger(classOf[TabDataLoader])
 
-	private val TUPLE_FIELD = "records"
-	private val cache = Tab2MethodInvocationCacheMap().lookup(jloader.tableName)
+	private[this] val TUPLE_FIELD = "records"
+	private[this] val cache = Tab2MethodInvocationCacheMap().lookup(jloader.tableName)
 
-	private def realFieldVal(field: FieldInfo): Object = {
+	private[this] def realFieldVal(field: FieldInfo): Object = {
 		field.fieldType match {
 			case DataTypes.String  => field.fieldValue
 			case DataTypes.Int     => java.lang.Integer.valueOf(field.fieldValue)
@@ -47,7 +47,7 @@ class TabDataLoader(private val classToLoad: String, private val jloader: JsonLo
 		obj.asInstanceOf[Object]
 	}
 
-	private def fillInField(tuple: Object, field: FieldInfo, value: Object): Unit = {
+	private[this] def fillInField(tuple: Object, field: FieldInfo, value: Object): Unit = {
 		val beanInfo = Introspector.getBeanInfo(tuple.getClass)
 		val propertyDescriptors = beanInfo.getPropertyDescriptors
 		propertyDescriptors.toList.filter(field.fieldName == _.getName) match {
@@ -67,7 +67,7 @@ class TabDataLoader(private val classToLoad: String, private val jloader: JsonLo
 		}
 	}
 
-	private def loadTupleClz(instance: Any): Class[_] = {
+	private[this] def loadTupleClz(instance: Any): Class[_] = {
 		val tupleClassName = instance.getClass.getName + "Data"
 		//must use same classloader as PojoGen
 		LOGGER.info("=====================load class: {}=====================", tupleClassName)

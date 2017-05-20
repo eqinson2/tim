@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
   * Created by eqinson on 2017/5/13.
   */
 class GtLtTest extends TestBase {
-	private val LOGGER = LoggerFactory.getLogger(classOf[GtLtTest])
+	private[this] val LOGGER = LoggerFactory.getLogger(classOf[GtLtTest])
 
 	"Test1" should "pass gt lt test" in {
 		LOGGER.info("=====================select some data for testing gt lt=====================")

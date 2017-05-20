@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
   * Created by eqinson on 2017/5/13.
   */
 class LikeTest extends TestBase {
-	private val LOGGER = LoggerFactory.getLogger(classOf[LikeTest])
+	private[this] val LOGGER = LoggerFactory.getLogger(classOf[LikeTest])
 
 	"Test1" should "pass like test" in {
 		LOGGER.info("=====================select some data for testing like/unlike=====================")

@@ -19,25 +19,25 @@ case class TypeInfo(theName: String, theType: String) {
 
 
 class JsonLoader(var tableName: String) {
-	private val LOGGER = LoggerFactory.getLogger(classOf[JsonLoader])
+	private[this] val LOGGER = LoggerFactory.getLogger(classOf[JsonLoader])
 
-	private val TABLE_TAG = "Table"
-	private val ID_TAG = "Id"
-	private val TABLE_HEADER_TAG = "Header"
-	private val TABLE_CONTENT_TAG = "Content"
-	private val TABLE_TUPLE_TAG = "Tuple"
-	private val PATTERN = "\\{[\\w ]+\\}".r
-	private var tableHeaderIndexMap: Map[Integer, TypeInfo] = Map[Integer, TypeInfo]()
+	private[this] val TABLE_TAG = "Table"
+	private[this] val ID_TAG = "Id"
+	private[this] val TABLE_HEADER_TAG = "Header"
+	private[this] val TABLE_CONTENT_TAG = "Content"
+	private[this] val TABLE_TUPLE_TAG = "Tuple"
+	private[this] val PATTERN = "\\{[\\w ]+\\}".r
+	private[this] var tableHeaderIndexMap: Map[Integer, TypeInfo] = Map[Integer, TypeInfo]()
 
 	val tableMetadata: mutable.Map[String, String] = mutable.LinkedHashMap[String, String]()
 	var tupleList: List[List[FieldInfo]] = List[List[FieldInfo]]()
 
-	private def trimBrace(s: String): String = {
+	private[this] def trimBrace(s: String): String = {
 		if (s.length >= 2) s.substring(1, s.length - 1)
 		else ""
 	}
 
-	private def parseTableHeader(root: JSONObject): Unit = {
+	private[this] def parseTableHeader(root: JSONObject): Unit = {
 		val arr: JSONArray = root.getJSONArray(TABLE_HEADER_TAG)
 		var i: Int = 0
 		for (i <- 0 until arr.length) {
@@ -54,7 +54,7 @@ class JsonLoader(var tableName: String) {
 		}
 	}
 
-	private def parseTableContent(root: JSONObject): Unit = {
+	private[this] def parseTableContent(root: JSONObject): Unit = {
 		val arr: JSONArray = root.getJSONArray(TABLE_CONTENT_TAG)
 		var i: Int = 0
 		for (i <- 0 until arr.length) {

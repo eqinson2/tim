@@ -4,7 +4,7 @@ package com.ericsson.ema.tim.context
   * Created by eqinson on 2017/5/5.
   */
 class TableInfoMap {
-	private var registry = Map[String, TableInfoContext]()
+	private[this] var registry = Map[String, TableInfoContext]()
 
 	def clear(): Unit = {
 		registry = Map[String, TableInfoContext]()
@@ -22,7 +22,7 @@ class TableInfoMap {
 }
 
 object TableInfoMap {
-	val instance: TableInfoMap = new TableInfoMap
+	private[this] val instance = new TableInfoMap
 
 	def apply(): TableInfoMap = instance
 }

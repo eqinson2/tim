@@ -19,12 +19,12 @@ import org.slf4j.LoggerFactory
 /**
   * Created by eqinson on 2017/5/5.
   */
-class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
-	private val LOGGER = LoggerFactory.getLogger(classOf[ZKMonitor])
+class ZKMonitor(zkConnectionManager: ZKConnectionManager) {
+	private[this] val LOGGER = LoggerFactory.getLogger(classOf[ZKMonitor])
 
-	private var zkRootPath: String = _
-	private var nodeChildCache: NodeChildCache = _
-	private val lock = new ReentrantLock
+	private[this] var zkRootPath: String = _
+	private[this] var nodeChildCache: NodeChildCache = _
+	private[this] val lock = new ReentrantLock
 
 	def start(): Unit = {
 		try
@@ -47,7 +47,7 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 		unloadAllTable()
 	}
 
-	private def loadAllTable(): Unit = {
+	private[this] def loadAllTable(): Unit = {
 		unloadAllTable()
 		var children: List[String] = Nil
 		try {
@@ -64,7 +64,7 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 	}
 
 	//thread safe
-	private def loadOneTable(zkNodeName: String): Unit = {
+	private[this] def loadOneTable(zkNodeName: String): Unit = {
 		LOGGER.debug("Start to load data for node {}", zkNodeName)
 		lock.lock()
 		try {
@@ -109,13 +109,13 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 		}
 	}
 
-	private def loadJsonFromRawData(json: String, tableName: String) = {
+	private[this] def loadJsonFromRawData(json: String, tableName: String) = {
 		val jloader = new JsonLoader(tableName)
 		jloader.loadJsonFromString(json)
 		jloader
 	}
 
-	private def buildDataModelFromJson(jloader: JsonLoader) = {
+	private[this] def buildDataModelFromJson(jloader: JsonLoader) = {
 		LOGGER.info("=====================parse json=====================")
 		val tt = new TableTuple("records", jloader.tableName + "Data")
 		tt.tuples = jloader.tableMetadata.foldRight(List[NameType]())((kv, list) => NameType(kv._1, kv._2) :: list)
@@ -124,7 +124,7 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 		table
 	}
 
-	private def loadDataByReflection(jloader: JsonLoader) = {
+	private[this] def loadDataByReflection(jloader: JsonLoader) = {
 		LOGGER.info("=====================load data by reflection=====================")
 		val classToLoad = PojoGenerator.pojoPkg + "." + jloader.tableName
 		try
@@ -136,18 +136,18 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 		}
 	}
 
-	private def isMetaDataDefined(jsonLoader: JsonLoader) = {
+	private[this] def isMetaDataDefined(jsonLoader: JsonLoader) = {
 		val defined = MetaDataRegistry().isRegistered(jsonLoader.tableName, jsonLoader.tableMetadata.toMap)
 		if (defined) LOGGER.info("Metadata already defined for {}, skip regenerating javabean...", jsonLoader.tableName)
 		else LOGGER.info("Metadata NOT defined for {}", jsonLoader.tableName)
 		defined
 	}
 
-	private def updateMetaData(jsonLoader: JsonLoader) = {
+	private[this] def updateMetaData(jsonLoader: JsonLoader) = {
 		MetaDataRegistry().registerMetaData(jsonLoader.tableName, jsonLoader.tableMetadata.toMap)
 	}
 
-	private def getDataZKNoException(zooKeeper: ZooKeeper, zkTarget: String, watcher: Watcher) =
+	private[this] def getDataZKNoException(zooKeeper: ZooKeeper, zkTarget: String, watcher: Watcher) =
 		try
 			zooKeeper.getData(zkTarget, watcher, null)
 		catch {
@@ -156,9 +156,9 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 				new Array[Byte](0)
 		}
 
-	private def getConnection = zkConnectionManager.getConnection.getOrElse(throw new KeeperException.ConnectionLossException)
+	private[this] def getConnection = zkConnectionManager.getConnection.getOrElse(throw new KeeperException.ConnectionLossException)
 
-	private def unloadAllTable() = {
+	private[this] def unloadAllTable() = {
 		LOGGER.info("=====================unregister all table=====================")
 		MetaDataRegistry().clear()
 		TableInfoMap().clear()
@@ -166,7 +166,7 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 		Tab2ClzMap().clear()
 	}
 
-	private def unloadOneTable(zkNodeName: String) = {
+	private[this] def unloadOneTable(zkNodeName: String) = {
 		LOGGER.info("=====================registerOrReplace {}=====================", zkNodeName)
 		MetaDataRegistry().unregisterMetaData(zkNodeName)
 		TableInfoMap().unregister(zkNodeName)
@@ -174,15 +174,15 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 		Tab2ClzMap().unRegister(zkNodeName)
 	}
 
-	private def childrenAdded(children: List[String]): Unit = {
+	private[this] def childrenAdded(children: List[String]): Unit = {
 		children.foreach(loadOneTable)
 	}
 
-	private def childrenRemoved(children: List[String]): Unit = {
+	private[this] def childrenRemoved(children: List[String]): Unit = {
 		children.foreach(unloadOneTable)
 	}
 
-	private class NodeChildrenChangedListenerImpl extends NodeChildrenChangedListener {
+	private[this] class NodeChildrenChangedListenerImpl extends NodeChildrenChangedListener {
 
 		import scala.collection.JavaConversions._
 
@@ -199,7 +199,7 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 		}
 	}
 
-	private class ZooKeeperConnectionStateListenerImpl extends ZKConnectionChangeWatcher {
+	private[this] class ZooKeeperConnectionStateListenerImpl extends ZKConnectionChangeWatcher {
 		override def stateChange(state: State): Unit = {
 			state match {
 				case State.CONNECTED | State.RECONNECTED => loadAllTable()
@@ -208,7 +208,7 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 		}
 	}
 
-	private class NodeWatcher private[zookeeper](val zkNodeName: String) extends Watcher {
+	private[this] class NodeWatcher(val zkNodeName: String) extends Watcher {
 		override def process(event: WatchedEvent): Unit = {
 			if (event.getType == Watcher.Event.EventType.NodeDataChanged)
 				loadOneTable(zkNodeName)

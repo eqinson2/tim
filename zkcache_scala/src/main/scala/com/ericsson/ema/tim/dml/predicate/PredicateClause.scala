@@ -8,19 +8,19 @@ import org.slf4j.LoggerFactory
   * Created by eqinson on 2017/5/12.
   */
 trait PredicateClause extends SelectClause {
-	private val LOGGER = LoggerFactory.getLogger(classOf[PredicateClause])
+	private[this] val LOGGER = LoggerFactory.getLogger(classOf[PredicateClause])
 
-	val valueToComp: Object
+	protected val valueToComp: Object
 
-	type matcherFuncType = (Object, Object) => Boolean
+	protected type matcherFuncType = (Object, Object) => Boolean
 
-	val defaultString: matcherFuncType = (_, _) => unsupportedOperation(DataTypes.String)
-	val defaultInt: matcherFuncType = (_, _) => unsupportedOperation(DataTypes.Int)
-	val defaultBool: matcherFuncType = (_, _) => unsupportedOperation(DataTypes.Boolean)
+	protected val defaultString: matcherFuncType = (_, _) => unsupportedOperation(DataTypes.String)
+	protected val defaultInt: matcherFuncType = (_, _) => unsupportedOperation(DataTypes.Int)
+	protected val defaultBool: matcherFuncType = (_, _) => unsupportedOperation(DataTypes.Boolean)
 
-	val StringMatcher: matcherFuncType = defaultString
-	val IntMatcher: matcherFuncType = defaultInt
-	val BoolMatcher: matcherFuncType = defaultBool
+	protected val StringMatcher: matcherFuncType = defaultString
+	protected val IntMatcher: matcherFuncType = defaultInt
+	protected val BoolMatcher: matcherFuncType = defaultBool
 
 	def eval(tuple: Object): Boolean = {
 		if (Option(this.valueToComp).isEmpty)
@@ -40,7 +40,7 @@ trait PredicateClause extends SelectClause {
 		}
 	}
 
-	private def unsupportedOperation(oper: String): Boolean = {
+	private[this] def unsupportedOperation(oper: String): Boolean = {
 		LOGGER.error("unsupported data type: {},{}", field, oper: Any)
 		throw DmlBadSyntaxException("unsupported data type: " + field + "," + oper)
 	}

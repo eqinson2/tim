@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory
 /**
   * Created by eqinson on 2017/5/12.
   */
-class OrderBy private(override val field: String, val reversed: Boolean) extends SelectClause {
-	private val LOGGER = LoggerFactory.getLogger(classOf[OrderBy])
+class OrderBy private(override val field: String, reversed: Boolean) extends SelectClause {
+	private[this] val LOGGER = LoggerFactory.getLogger(classOf[OrderBy])
 
 	def ordering(): Ordering[Object] = {
 		selector.context.tableMetadata.get(field) match {

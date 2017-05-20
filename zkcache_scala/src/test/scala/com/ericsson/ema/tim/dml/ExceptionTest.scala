@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
   * Created by eqinson on 2017/5/13.
   */
 class ExceptionTest extends TestBase {
-	private val LOGGER = LoggerFactory.getLogger(classOf[ExceptionTest])
+	private[this] val LOGGER = LoggerFactory.getLogger(classOf[ExceptionTest])
 
 	"Test1" should "pass ExceptionTest" in {
 		LOGGER.info("=====================select some data for testing exists=====================")

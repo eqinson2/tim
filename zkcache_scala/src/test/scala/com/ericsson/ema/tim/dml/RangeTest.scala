@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
   * Created by eqinson on 2017/5/13.
   */
 class RangeTest extends TestBase {
-	private val LOGGER = LoggerFactory.getLogger(classOf[EqTest])
+	private[this] val LOGGER = LoggerFactory.getLogger(classOf[EqTest])
 
 	"Test1" should "pass range test" in {
 		LOGGER.info("=====================select some data for testing range=====================")

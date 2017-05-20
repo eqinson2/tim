@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
   * Created by eqinson on 2017/5/13.
   */
 class UnEqTest extends TestBase {
-	private val LOGGER = LoggerFactory.getLogger(classOf[UnEqTest])
+	private[this] val LOGGER = LoggerFactory.getLogger(classOf[UnEqTest])
 
 	"Test1" should "pass uneq test" in {
 		LOGGER.info("=====================select some data for testing uneq=====================")
