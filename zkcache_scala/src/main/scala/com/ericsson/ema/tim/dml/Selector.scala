@@ -1,6 +1,6 @@
 package com.ericsson.ema.tim.dml
 
-import com.ericsson.ema.tim.dml.predicate.Predicate
+import com.ericsson.ema.tim.dml.predicate.PredicateClause
 
 /**
   * Created by eqinson on 2017/5/12.
@@ -8,7 +8,7 @@ import com.ericsson.ema.tim.dml.predicate.Predicate
 trait Selector {
 	def from(tab: String): Selector
 
-	def where(predicate: Predicate): Selector
+	def where(predicate: PredicateClause): Selector
 
 	def limit(limit: Int): Selector
 
@@ -27,5 +27,4 @@ trait Selector {
 	def groupBy(field: String): Selector
 
 	def collectByGroup(): Map[Object, List[Object]]
-
 }

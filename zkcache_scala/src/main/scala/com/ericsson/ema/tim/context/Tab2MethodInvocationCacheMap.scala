@@ -1,4 +1,6 @@
-package com.ericsson.ema.tim.reflection
+package com.ericsson.ema.tim.context
+
+import com.ericsson.ema.tim.reflection.MethodInvocationCache
 
 /**
   * Created by eqinson on 2017/5/5.
@@ -28,7 +30,7 @@ class Tab2MethodInvocationCacheMap {
 }
 
 object Tab2MethodInvocationCacheMap {
-	var instance: Tab2MethodInvocationCacheMap = new Tab2MethodInvocationCacheMap
+	val instance: Tab2MethodInvocationCacheMap = new Tab2MethodInvocationCacheMap
 
 	def apply(): Tab2MethodInvocationCacheMap = instance
 }

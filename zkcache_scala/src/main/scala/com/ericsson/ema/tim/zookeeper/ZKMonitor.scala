@@ -3,11 +3,11 @@ package com.ericsson.ema.tim.zookeeper
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.locks.ReentrantLock
 
-import com.ericsson.ema.tim.dml.TableInfoMap
+import com.ericsson.ema.tim.context.{MetaDataRegistry, Tab2ClzMap, Tab2MethodInvocationCacheMap, TableInfoMap}
 import com.ericsson.ema.tim.json.JsonLoader
 import com.ericsson.ema.tim.lock.ZKCacheRWLockMap.zkCacheRWLock
 import com.ericsson.ema.tim.pojo.{NameType, PojoGenerator, Table, TableTuple}
-import com.ericsson.ema.tim.reflection.{Tab2ClzMap, Tab2MethodInvocationCacheMap, TabDataLoader}
+import com.ericsson.ema.tim.reflection.TabDataLoader
 import com.ericsson.ema.tim.zookeeper.State.State
 import com.ericsson.util.SystemPropertyUtil
 import com.ericsson.zookeeper.{NodeChildCache, NodeChildrenChangedListener, ZooKeeperUtil}
@@ -128,7 +128,7 @@ class ZKMonitor(private val zkConnectionManager: ZKConnectionManager) {
 		LOGGER.info("=====================load data by reflection=====================")
 		val classToLoad = PojoGenerator.pojoPkg + "." + jloader.tableName
 		try
-			TabDataLoader(classToLoad, jloader).loadData
+			TabDataLoader(classToLoad, jloader).loadData()
 		catch {
 			case e@(_: ClassNotFoundException | _: IllegalAccessException | _: InstantiationException | _: InvocationTargetException) =>
 				e.printStackTrace()

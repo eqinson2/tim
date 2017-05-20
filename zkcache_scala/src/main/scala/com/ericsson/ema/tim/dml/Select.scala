@@ -3,12 +3,13 @@ package com.ericsson.ema.tim.dml
 
 import java.lang.reflect.InvocationTargetException
 
+import com.ericsson.ema.tim.context.{Tab2MethodInvocationCacheMap, TableInfoContext, TableInfoMap}
 import com.ericsson.ema.tim.dml.group.GroupBy
 import com.ericsson.ema.tim.dml.order.{ChainableOrderings, OrderBy}
-import com.ericsson.ema.tim.dml.predicate.Predicate
+import com.ericsson.ema.tim.dml.predicate.PredicateClause
 import com.ericsson.ema.tim.exception.DmlBadSyntaxException
 import com.ericsson.ema.tim.lock.ZKCacheRWLockMap.zkCacheRWLock
-import com.ericsson.ema.tim.reflection.{AccessType, MethodInvocationCache, Tab2MethodInvocationCacheMap}
+import com.ericsson.ema.tim.reflection.{AccessType, MethodInvocationCache}
 
 /**
   * Created by eqinson on 2017/5/12.
@@ -22,16 +23,18 @@ object Select {
 
 class Select private() extends Selector with ChainableOrderings {
 	private val TUPLE_FIELD: String = "records"
-	var selectedFields: List[String] = List[String]()
-	var context: TableInfoContext = _
-	var methodInvocationCache: MethodInvocationCache = _
-	private var predicates = List[Predicate]()
+
+	private var selectedFields: List[String] = List[String]()
+	private var predicates = List[PredicateClause]()
 	private var orderBys = List[OrderBy]()
 	private var groupBy: GroupBy = _
 	private var limit = Integer.MIN_VALUE
 	private var skip = Integer.MIN_VALUE
 	private var table: String = _
 	private var records: List[Object] = _
+
+	var context: TableInfoContext = _
+	var methodInvocationCache: MethodInvocationCache = _
 
 	def this(fields: String*) {
 		this()
@@ -43,7 +46,7 @@ class Select private() extends Selector with ChainableOrderings {
 		this
 	}
 
-	override def where(predicate: Predicate): Selector = {
+	override def where(predicate: PredicateClause): Selector = {
 		this.predicates :+= predicate
 		predicate.asInstanceOf[SelectClause].selector = this
 		this
@@ -110,7 +113,6 @@ class Select private() extends Selector with ChainableOrderings {
 		this.methodInvocationCache = Tab2MethodInvocationCacheMap().lookup(table)
 		//it is safe because records must be List according to JavaBean definition
 		val tupleField = invokeGetByReflection(context.tabledata, TUPLE_FIELD)
-		assert(tupleField.isInstanceOf[java.util.List[Object]])
 		import scala.collection.JavaConversions._
 		this.records = tupleField.asInstanceOf[java.util.List[Object]].toList
 	}
@@ -126,7 +128,7 @@ class Select private() extends Selector with ChainableOrderings {
 	}
 
 	private def internalPredicate(): Object => Boolean = {
-		r: Object => predicates.map(_.eval(r)).reduce(_ && _)
+		r => predicates.map(_.eval(r)).reduce(_ && _)
 	}
 
 	override def count(): Long = {

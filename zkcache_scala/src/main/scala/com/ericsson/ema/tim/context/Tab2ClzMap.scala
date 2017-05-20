@@ -1,4 +1,4 @@
-package com.ericsson.ema.tim.reflection
+package com.ericsson.ema.tim.context
 
 /**
   * Created by eqinson on 2017/5/5.
@@ -22,7 +22,7 @@ class Tab2ClzMap {
 }
 
 object Tab2ClzMap {
-	var instance: Tab2ClzMap = new Tab2ClzMap
+	val instance: Tab2ClzMap = new Tab2ClzMap
 
 	def apply(): Tab2ClzMap = instance
 }

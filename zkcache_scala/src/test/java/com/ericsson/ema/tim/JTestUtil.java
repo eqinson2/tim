@@ -1,6 +1,5 @@
 package com.ericsson.ema.tim;
 
-import com.ericsson.ema.tim.utils.FileUtils;
 import com.ericsson.ema.tim.zookeeper.ZKMonitor;
 
 import java.io.FileNotFoundException;
@@ -11,10 +10,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by eqinson on 2017/4/24.
- */
-public class JTestUtil {
+class JTestUtil {
     static void init(String testFile, String tableName) throws IOException, URISyntaxException {
         URL url = Thread.currentThread().getContextClassLoader().getResource(testFile);
         if (url != null) {

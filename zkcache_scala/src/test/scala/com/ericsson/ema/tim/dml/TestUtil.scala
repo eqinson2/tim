@@ -3,7 +3,7 @@ package com.ericsson.ema.tim.dml
 import java.io.FileNotFoundException
 import java.nio.file.Paths
 
-import com.ericsson.ema.tim.utils.FileUtils
+import com.ericsson.ema.tim.FileUtils
 import com.ericsson.ema.tim.zookeeper.ZKMonitor
 
 /**

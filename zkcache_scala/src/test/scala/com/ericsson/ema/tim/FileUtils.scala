@@ -1,4 +1,4 @@
-package com.ericsson.ema.tim.utils
+package com.ericsson.ema.tim
 
 import java.nio.file.Path
 

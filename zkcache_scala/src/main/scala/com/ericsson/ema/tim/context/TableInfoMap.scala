@@ -1,4 +1,4 @@
-package com.ericsson.ema.tim.dml
+package com.ericsson.ema.tim.context
 
 /**
   * Created by eqinson on 2017/5/5.
@@ -22,7 +22,7 @@ class TableInfoMap {
 }
 
 object TableInfoMap {
-	var instance: TableInfoMap = new TableInfoMap
+	val instance: TableInfoMap = new TableInfoMap
 
 	def apply(): TableInfoMap = instance
 }

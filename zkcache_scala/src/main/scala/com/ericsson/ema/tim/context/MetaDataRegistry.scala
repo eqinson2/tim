@@ -1,4 +1,4 @@
-package com.ericsson.ema.tim.zookeeper
+package com.ericsson.ema.tim.context
 
 /**
   * Created by eqinson on 2017/5/5.
@@ -25,7 +25,7 @@ class MetaDataRegistry {
 }
 
 object MetaDataRegistry {
-	var instance: MetaDataRegistry = new MetaDataRegistry
+	val instance: MetaDataRegistry = new MetaDataRegistry
 
 	def apply(): MetaDataRegistry = instance
 }

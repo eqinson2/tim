@@ -8,7 +8,8 @@
         <encoding>UTF-8</encoding>
         <scala.tools.version>2.11</scala.tools.version>
         <scala.version>2.11.7</scala.version>
-        <scala.test.version>2.2.5</scala.test.version>
+        <scala.test.version>2.2.6</scala.test.version>
+        <scala.xml.version>1.0.5</scala.xml.version>
     </properties>
 
     <dependencies>
@@ -21,6 +22,12 @@
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.tools.version}</artifactId>
             <version>${scala.test.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-xml_2.11</artifactId>
+            <version>${scala.xml.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -7,17 +7,15 @@ import org.slf4j.LoggerFactory
 /**
   * Created by eqinson on 2017/5/13.
   */
-class GroupBy(private val field: String) extends SelectClause {
+class GroupBy(override val field: String) extends SelectClause {
 	private val LOGGER = LoggerFactory.getLogger(classOf[GroupBy])
 
-	override def getField: String = field
-
-	type keyExtractorFuncType = (Object => Object)
+	private type keyExtractorFuncType = (Object => Object)
 
 	def keyExtractor(): keyExtractorFuncType = {
 		selector.context.tableMetadata.get(field) match {
 			case Some(DataTypes.String) | Some(DataTypes.Int) | Some(DataTypes.Boolean) =>
-				o: Object => getFiledValFromTupleByName(o)
+				getFiledValFromTupleByName
 			case Some(other)                                                            =>
 				LOGGER.error("unsupported data type: {},{}", field, other: Any)
 				throw DmlBadSyntaxException("Error: unsupported data type: " + field + "," + other)

@@ -6,18 +6,14 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 
 import com.ericsson.ema.tim.exception.DmlNoSuchFieldException
-import org.slf4j.LoggerFactory
 
 /**
   * Created by eqinson on 2017/5/5.
   */
 class MethodInvocationCache {
-	private val LOGGER = LoggerFactory.getLogger(classOf[MethodInvocationCache])
-
 	private val getterStore = new ConcurrentHashMap[MethodInvocationKey, Method]
 	private val setterStore = new ConcurrentHashMap[MethodInvocationKey, Method]
 	private val lock = new ReentrantLock
-
 
 	def cleanup(): Unit = {
 		getterStore.clear()
@@ -50,28 +46,10 @@ class MethodInvocationCache {
 		}
 	}
 
-	class MethodInvocationKey private() {
-		private var hashcode: Int = _
-		private var lookupClass: Class[_] = _
-		private var methodName: String = _
+	class MethodInvocationKey(val lookupClass: Class[_], val methodName: String) {
+		require(Option(lookupClass).isDefined && Option(methodName).isDefined)
 
-		def this(lookupClass: Class[_], methodName: String) = {
-			this()
-			this.lookupClass = lookupClass
-			this.methodName = methodName
-
-			var result = Option(lookupClass) match {
-				case Some(clz) => clz.hashCode()
-				case None      => 0
-			}
-			result = 31 * result + {
-				Option(methodName) match {
-					case Some(m) => m.hashCode()
-					case None    => 0
-				}
-			}
-			this.hashcode = result
-		}
+		private val hashcode: Int = 31 * lookupClass.hashCode() + methodName.hashCode
 
 		override def equals(o: Any): Boolean = {
 			o match {

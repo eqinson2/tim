@@ -94,7 +94,7 @@ class ZKConnectionManager {
 	def getConnection: Option[ZooKeeper] = Option(zooKeeper)
 
 	def registerListener(listener: ZKConnectionChangeWatcher): Unit = {
-		listeners = listeners :+ listener
+		listeners :+= listener
 	}
 
 	private def notifyListener(state: State): Unit = {

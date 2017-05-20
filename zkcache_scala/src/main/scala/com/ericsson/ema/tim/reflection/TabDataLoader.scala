@@ -4,6 +4,7 @@ package com.ericsson.ema.tim.reflection
 import java.beans.Introspector
 import java.lang.reflect.InvocationTargetException
 
+import com.ericsson.ema.tim.context.{Tab2ClzMap, Tab2MethodInvocationCacheMap}
 import com.ericsson.ema.tim.dml.DataTypes
 import com.ericsson.ema.tim.exception.DmlNoSuchFieldException
 import com.ericsson.ema.tim.json.{FieldInfo, JsonLoader}
@@ -12,7 +13,7 @@ import org.slf4j.LoggerFactory
 /**
   * Created by eqinson on 2017/5/10.
   */
-class TabDataLoader(val classToLoad: String, val jloader: JsonLoader) {
+class TabDataLoader(private val classToLoad: String, private val jloader: JsonLoader) {
 	private val LOGGER = LoggerFactory.getLogger(classOf[TabDataLoader])
 
 	private val TUPLE_FIELD = "records"
@@ -29,7 +30,7 @@ class TabDataLoader(val classToLoad: String, val jloader: JsonLoader) {
 		}
 	}
 
-	def loadData: Object = {
+	def loadData(): Object = {
 		LOGGER.info("=====================reflect class: {}=====================", classToLoad)
 		val clz = Tab2ClzMap().lookup(jloader.tableName).getOrElse(Thread.currentThread.getContextClassLoader.loadClass(classToLoad))
 		Tab2ClzMap().register(jloader.tableName, clz)
@@ -40,13 +41,13 @@ class TabDataLoader(val classToLoad: String, val jloader: JsonLoader) {
 		val records = getter.invoke(obj).asInstanceOf[java.util.List[Object]]
 		for (row <- jloader.tupleList) {
 			val tuple = tupleListType.newInstance.asInstanceOf[Object]
-			row.foreach(field => fillinField(tuple, field, realFieldVal(field)))
+			row.foreach(field => fillInField(tuple, field, realFieldVal(field)))
 			records.add(tuple)
 		}
 		obj.asInstanceOf[Object]
 	}
 
-	private def fillinField(tuple: Object, field: FieldInfo, value: Object): Unit = {
+	private def fillInField(tuple: Object, field: FieldInfo, value: Object): Unit = {
 		val beanInfo = Introspector.getBeanInfo(tuple.getClass)
 		val propertyDescriptors = beanInfo.getPropertyDescriptors
 		propertyDescriptors.toList.filter(field.fieldName == _.getName) match {
@@ -54,15 +55,15 @@ class TabDataLoader(val classToLoad: String, val jloader: JsonLoader) {
 				val setter = h.getWriteMethod
 				try {
 					setter.invoke(tuple, value)
-					LOGGER.debug("fillinField : {} = {}", field.fieldName, value: Any)
+					LOGGER.debug("fillInField : {} = {}", field.fieldName, value: Any)
 				} catch {
 					case e@(_: IllegalAccessException | _: InvocationTargetException) =>
 						e.printStackTrace()
-						LOGGER.error("error fillinField : {}", field)
+						LOGGER.error("error fillInField : {}", field)
 				}
 			case _      =>
 				LOGGER.error("should not happen.")
-				throw new RuntimeException("bug in fillinField...")
+				throw new RuntimeException("bug in fillInField...")
 		}
 	}
 
