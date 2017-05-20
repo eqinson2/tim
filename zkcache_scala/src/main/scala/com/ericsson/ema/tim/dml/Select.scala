@@ -14,13 +14,6 @@ import com.ericsson.ema.tim.reflection.{AccessType, MethodInvocationCache}
 /**
   * Created by eqinson on 2017/5/12.
   */
-object Select {
-	def apply() = new Select
-
-	def apply(fields: String*) = new Select(fields: _*)
-}
-
-
 class Select private() extends Selector with ChainableOrderings {
 	private val TUPLE_FIELD: String = "records"
 
@@ -89,11 +82,6 @@ class Select private() extends Selector with ChainableOrderings {
 		}
 	}
 
-	/**
-	  * rwlock table when internalExecute
-	  *
-	  * @return List of tuple
-	  */
 	private def internalExecute(): List[Object] = {
 		initExecuteContext()
 		var result = records
@@ -188,5 +176,8 @@ class Select private() extends Selector with ChainableOrderings {
 	}
 }
 
+object Select {
+	def apply() = new Select
 
-
+	def apply(fields: String*) = new Select(fields: _*)
+}
