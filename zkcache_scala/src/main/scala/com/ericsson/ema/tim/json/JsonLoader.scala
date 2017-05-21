@@ -1,7 +1,7 @@
 package com.ericsson.ema.tim.json
 
 
-import org.json.{JSONArray, JSONObject}
+import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
@@ -38,12 +38,11 @@ class JsonLoader(var tableName: String) {
 	}
 
 	private[this] def parseTableHeader(root: JSONObject): Unit = {
-		val arr: JSONArray = root.getJSONArray(TABLE_HEADER_TAG)
-		var i: Int = 0
+		val arr = root.getJSONArray(TABLE_HEADER_TAG)
 		for (i <- 0 until arr.length) {
 			val keys = arr.getJSONObject(i).keys
 			while (keys.hasNext) {
-				val key: String = keys.next
+				val key = keys.next
 				arr.getJSONObject(i).get(key) match {
 					case t: String =>
 						tableHeaderIndexMap += (Integer.valueOf(i) -> TypeInfo(key, t))
@@ -55,19 +54,12 @@ class JsonLoader(var tableName: String) {
 	}
 
 	private[this] def parseTableContent(root: JSONObject): Unit = {
-		val arr: JSONArray = root.getJSONArray(TABLE_CONTENT_TAG)
-		var i: Int = 0
+		val arr = root.getJSONArray(TABLE_CONTENT_TAG)
 		for (i <- 0 until arr.length) {
 			val content = arr.getJSONObject(i).getString(TABLE_TUPLE_TAG)
-			var tuple = List[FieldInfo]()
-			var column = 0
-			for (matchedField <- PATTERN.findAllIn(content)) {
-				tableHeaderIndexMap.get(column) match {
-					case Some(f) => tuple :+= FieldInfo(trimBrace(matchedField), f.theName, f.theType)
-					case None    => throw new RuntimeException("bug: illegal tableHeaderIndexMap content...")
-				}
-				column += 1
-			}
+			val tuple = for ((matchedField, column) <- PATTERN.findAllIn(content).zipWithIndex.toList;
+							 f = tableHeaderIndexMap(column))
+				yield FieldInfo(trimBrace(matchedField), f.theName, f.theType)
 			tupleList :+= tuple
 		}
 	}

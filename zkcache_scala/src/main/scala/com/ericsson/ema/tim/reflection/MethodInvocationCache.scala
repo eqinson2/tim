@@ -49,7 +49,7 @@ class MethodInvocationCache {
 	private[this] class MethodInvocationKey(val lookupClass: Class[_], val methodName: String) {
 		require(Option(lookupClass).isDefined && Option(methodName).isDefined)
 
-		private[this] val hashcode: Int = 31 * lookupClass.hashCode() + methodName.hashCode
+		private[this] val hashcode: Int = 31 * lookupClass.hashCode + methodName.hashCode
 
 		override def equals(o: Any): Boolean = {
 			o match {

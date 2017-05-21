@@ -23,12 +23,11 @@ trait PredicateClause extends SelectClause {
 	protected val BoolMatcher: matcherFuncType = defaultBool
 
 	def eval(tuple: Object): Boolean = {
-		if (Option(this.valueToComp).isEmpty)
+		if (Option(valueToComp).isEmpty)
 			return false
 
 		val fieldVal = getFiledValFromTupleByName(tuple)
 		val fieldType = selector.context.tableMetadata.get(field)
-
 		fieldType match {
 			case Some(DataTypes.String)  => StringMatcher(fieldVal, valueToComp)
 			case Some(DataTypes.Int)     => IntMatcher(fieldVal, valueToComp)

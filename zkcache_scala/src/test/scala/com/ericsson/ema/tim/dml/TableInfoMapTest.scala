@@ -7,7 +7,7 @@ import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
   * Created by eqinson on 2017/5/20.
   */
 class TableInfoMapTest extends FlatSpec with Matchers with BeforeAndAfterAll {
-	"Test" should "pass" in {
+	"Test1" should "pass" in {
 		assert(TableInfoMap() eq TableInfoMap())
 		assert(TableInfoMap() == TableInfoMap())
 	}

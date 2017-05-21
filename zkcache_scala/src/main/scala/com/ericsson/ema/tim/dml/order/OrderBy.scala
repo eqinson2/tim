@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 /**
   * Created by eqinson on 2017/5/12.
   */
-class OrderBy private(override val field: String, reversed: Boolean) extends SelectClause {
+class OrderBy private(protected override val field: String, reversed: Boolean) extends SelectClause {
 	private[this] val LOGGER = LoggerFactory.getLogger(classOf[OrderBy])
 
 	def ordering(): Ordering[Object] = {

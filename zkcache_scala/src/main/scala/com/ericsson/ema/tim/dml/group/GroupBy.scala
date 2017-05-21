@@ -7,10 +7,10 @@ import org.slf4j.LoggerFactory
 /**
   * Created by eqinson on 2017/5/13.
   */
-class GroupBy(override val field: String) extends SelectClause {
+class GroupBy(protected override val field: String) extends SelectClause {
 	private[this] val LOGGER = LoggerFactory.getLogger(classOf[GroupBy])
 
-	private[this] type keyExtractorFuncType = (Object => Object)
+	private[this] type keyExtractorFuncType = Object => Object
 
 	def keyExtractor(): keyExtractorFuncType = {
 		selector.context.tableMetadata.get(field) match {

@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
 /**
   * Created by eqinson on 2017/5/10.
   */
-class TabDataLoader(classToLoad: String, jloader: JsonLoader) {
+case class TabDataLoader(private val classToLoad: String, private val jloader: JsonLoader) {
 	private[this] val LOGGER = LoggerFactory.getLogger(classOf[TabDataLoader])
 
 	private[this] val TUPLE_FIELD = "records"
@@ -39,11 +39,11 @@ class TabDataLoader(classToLoad: String, jloader: JsonLoader) {
 		LOGGER.debug("init {}", tupleListType)
 		val getter = cache.get(clz, TUPLE_FIELD, AccessType.GET)
 		val records = getter.invoke(obj).asInstanceOf[java.util.List[Object]]
-		for (row <- jloader.tupleList) {
+		jloader.tupleList.foreach(row => {
 			val tuple = tupleListType.newInstance.asInstanceOf[Object]
 			row.foreach(field => fillInField(tuple, field, realFieldVal(field)))
 			records.add(tuple)
-		}
+		})
 		obj.asInstanceOf[Object]
 	}
 
@@ -75,6 +75,3 @@ class TabDataLoader(classToLoad: String, jloader: JsonLoader) {
 	}
 }
 
-object TabDataLoader {
-	def apply(classToLoad: String, jloader: JsonLoader) = new TabDataLoader(classToLoad, jloader)
-}
