@@ -36,9 +36,13 @@ class MethodInvocationCache {
 			case None         =>
 				lock.lock()
 				try {
-					val cached = lookup(clz, field)
-					store.put(key, cached)
-					cached
+					Option(store.get(key)) match {
+						case Some(cached) => cached
+						case None         =>
+							val cached = lookup(clz, field)
+							store.put(key, cached)
+							cached
+					}
 				}
 				finally {
 					lock.unlock()
