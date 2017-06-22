@@ -31,17 +31,17 @@ public class EqTest {
     public void testEq() {
         LOGGER.info("=====================select some data for testing eq=====================");
         List<Object> result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age",
-            "1")).collect();
+                "1")).collect();
         result.forEach(System.out::println);
         System.out.println();
 
         result = select().from(tableName).where(eq("name", "eqinson2")).where(eq("age", "6"))
-            .collect();
+                .collect();
         result.forEach(System.out::println);
         System.out.println();
 
         result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age", "4")).where(eq
-            ("job", "manager")).collect();
+                ("job", "manager")).collect();
         result.forEach(System.out::println);
         System.out.println();
 
@@ -64,7 +64,7 @@ public class EqTest {
         System.out.println();
 
         result = select().from(tableName).where(eq("name", "eqinson1")).where(eq("age", "4")).where(eq
-            ("job", "manager")).orderBy("name", "asc").orderBy("job", "desc").collect();
+                ("job", "manager")).orderBy("name", "asc").orderBy("job", "desc").collect();
         result.forEach(System.out::println);
         System.out.println();
 

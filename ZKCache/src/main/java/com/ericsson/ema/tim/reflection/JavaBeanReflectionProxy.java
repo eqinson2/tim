@@ -9,14 +9,14 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Optional;
 
-class JavaBeanReflectionProxy {
+public class JavaBeanReflectionProxy {
     private final static String TUPLENAME = "records";
     private final static Logger LOGGER = LoggerFactory.getLogger(JavaBeanReflectionProxy.class);
 
     private final Object instance;
     private final Class<?> tupleListType;
 
-    JavaBeanReflectionProxy(Object instance) throws ClassNotFoundException {
+    public JavaBeanReflectionProxy(Object instance) throws ClassNotFoundException {
         this.instance = instance;
         String tupleClassName = instance.getClass().getName() + "Data";
         //must use same classloader as PojoGen
@@ -25,11 +25,11 @@ class JavaBeanReflectionProxy {
 //        tupleListType = getTupleListTypeInfo().orElseGet(null);
     }
 
-    Class<?> getTupleListType() {
+    public Class<?> getTupleListType() {
         return tupleListType;
     }
 
-    private Optional<? extends Class<?>> getTupleListTypeInfo() {
+    Optional<? extends Class<?>> getTupleListTypeInfo() {
         Field field = Arrays.stream(instance.getClass().getDeclaredFields()).filter(f ->
                 TUPLENAME.equals(f.getName())).findFirst().orElseThrow(() -> new RuntimeException
                 ("no such field :" + TUPLENAME));

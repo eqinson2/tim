@@ -1,8 +1,8 @@
 package com.ericsson.ema.tim.reflection;
 
 import com.ericsson.ema.tim.dml.DataTypes;
-import com.ericsson.ema.tim.json.JsonLoader;
 import com.ericsson.ema.tim.json.FieldInfo;
+import com.ericsson.ema.tim.json.JsonLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +31,7 @@ public class TabDataLoader {
         cache = tab2MethodInvocationCacheMap.lookup(jloader.getTableName());
     }
 
-    private static Object realFieldVal(FieldInfo field) {
+    public static Object realFieldVal(FieldInfo field) {
         Object value = null;
         switch (field.getFieldType()) {
             case DataTypes.String:
@@ -49,11 +49,34 @@ public class TabDataLoader {
         return value;
     }
 
+    public static void fillInField(Object tuple, String field, Object value) throws Exception {
+        BeanInfo beanInfo = Introspector.getBeanInfo(tuple.getClass());
+        PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+
+        Arrays.stream(propertyDescriptors)
+                .filter(prop -> field.equals(prop.getName()))
+                .findFirst()
+                .ifPresent(
+                        prop -> {
+                            Method setter = prop.getWriteMethod();
+                            try {
+                                setter.invoke(tuple, value);
+                                LOGGER.debug("fillinField : {} = {}", field, value);
+                            } catch (IllegalAccessException | InvocationTargetException e) {
+                                e.printStackTrace();
+                                LOGGER.error("error fillinField : {}", field);
+                            } catch (IllegalArgumentException e) {
+                                e.printStackTrace();
+                                LOGGER.error("IllegalArgumentException fillinField : {}", field);
+                            }
+                        });
+    }
+
     public Object loadData() throws ClassNotFoundException, IllegalAccessException,
-        InstantiationException, InvocationTargetException {
+            InstantiationException, InvocationTargetException {
         LOGGER.info("=====================reflect class: {}=====================", classToLoad);
         Class<?> clz = tab2ClzMap.lookup(jloader.getTableName()).orElse(Thread.currentThread()
-            .getContextClassLoader().loadClass(classToLoad));
+                .getContextClassLoader().loadClass(classToLoad));
         tab2ClzMap.register(jloader.getTableName(), clz);
 
         Object obj = clz.newInstance();
@@ -76,35 +99,12 @@ public class TabDataLoader {
             records.add(tuple);
             for (FieldInfo field : row) {
                 try {
-                    fillinField(tuple, field, realFieldVal(field));
+                    fillInField(tuple, field.getFieldName(), realFieldVal(field));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
         return obj;
-    }
-
-    private void fillinField(Object tuple, FieldInfo field, Object value) throws Exception {
-        BeanInfo beanInfo = Introspector.getBeanInfo(tuple.getClass());
-        PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
-
-        Arrays.stream(propertyDescriptors)
-            .filter(prop -> field.getFieldName().equals(prop.getName()))
-            .findFirst()
-            .ifPresent(
-                prop -> {
-                    Method setter = prop.getWriteMethod();
-                    try {
-                        setter.invoke(tuple, value);
-                        LOGGER.debug("fillinField : {} = {}", field.getFieldName(), value);
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
-                        LOGGER.error("error fillinField : {}", field);
-                    } catch (IllegalArgumentException e) {
-                        e.printStackTrace();
-                        LOGGER.error("IllegalArgumentException fillinField : {}", field);
-                    }
-                });
     }
 }

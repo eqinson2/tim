@@ -21,18 +21,19 @@ public class MethodInvocationCache {
     private final Map<MethodInvocationKey, Method> setterStore = new ConcurrentHashMap<>();
     private final ReentrantLock lock = new ReentrantLock();
 
-    private static Method lookup(Class<?> clz, String property) throws IntrospectionException {
+    private static Method lookup(Class<?> clz, String property, AccessType accessType) throws IntrospectionException {
         BeanInfo beanInfo = Introspector.getBeanInfo(clz);
         return Arrays.stream(beanInfo.getPropertyDescriptors()).filter(prop -> property
-            .equals(prop.getName()))
-            .map(PropertyDescriptor::getReadMethod).findFirst().orElseThrow(() -> new
-                DmlNoSuchFieldException(property));
+                .equals(prop.getName()))
+                .map(accessType == AccessType.GET ? PropertyDescriptor::getReadMethod : PropertyDescriptor::getWriteMethod)
+                .findFirst()
+                .orElseThrow(() -> new DmlNoSuchFieldException(property));
     }
 
     public Method get(Class<?> clz, String field, AccessType accessType) {
         MethodInvocationKey key = new MethodInvocationKey(clz, field);
         Map<MethodInvocationKey, Method> store = accessType == AccessType.GET ?
-            getterStore : setterStore;
+                getterStore : setterStore;
         Method cached = store.get(key);
         if (cached == null) {
             lock.lock();
@@ -40,7 +41,7 @@ public class MethodInvocationCache {
                 cached = store.get(key);
                 if (cached == null) {
                     try {
-                        cached = lookup(clz, field);
+                        cached = lookup(clz, field, accessType);
                     } catch (IntrospectionException e) {
                         LOGGER.error(e.getMessage());
                         throw new RuntimeException(e);

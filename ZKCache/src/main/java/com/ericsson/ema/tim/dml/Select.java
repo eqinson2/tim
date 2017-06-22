@@ -4,34 +4,21 @@ import com.ericsson.ema.tim.dml.group.GroupBy;
 import com.ericsson.ema.tim.dml.order.OrderBy;
 import com.ericsson.ema.tim.dml.predicate.Predicate;
 import com.ericsson.ema.tim.exception.DmlBadSyntaxException;
-import com.ericsson.ema.tim.reflection.MethodInvocationCache;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.ericsson.ema.tim.dml.TableInfoMap.tableInfoMap;
 import static com.ericsson.ema.tim.lock.ZKCacheRWLockMap.zkCacheRWLock;
-import static com.ericsson.ema.tim.reflection.MethodInvocationCache.AccessType.GET;
-import static com.ericsson.ema.tim.reflection.Tab2MethodInvocationCacheMap.tab2MethodInvocationCacheMap;
 import static java.util.stream.Collectors.groupingBy;
 
-public class Select implements Selector {
-    private final static String TUPLE_FIELD = "records";
-
+public class Select extends AbstractOperator implements Selector, Operator {
     private final List<String> selectedFields;
     private final List<Predicate> predicates = new ArrayList<>();
     private final List<OrderBy> orderBys = new ArrayList<>();
     private GroupBy groupBy;
     private int limit = Integer.MIN_VALUE;
     private int skip = Integer.MIN_VALUE;
-
-    private String table;
-    private TableInfoContext context;
-    private List<Object> records;
-    private MethodInvocationCache methodInvocationCache;
 
     private Select() {
         this.selectedFields = Collections.emptyList();
@@ -53,14 +40,6 @@ public class Select implements Selector {
         return Collections.unmodifiableList(selectedFields);
     }
 
-    MethodInvocationCache getMethodInvocationCache() {
-        return methodInvocationCache;
-    }
-
-    public TableInfoContext getContext() {
-        return context;
-    }
-
     @Override
     public Selector from(String tab) {
         this.table = tab;
@@ -70,7 +49,7 @@ public class Select implements Selector {
     @Override
     public Selector where(Predicate predicate) {
         this.predicates.add(predicate);
-        ((SelectClause) predicate).setSelector(this);
+        ((Clause) predicate).setOperator(this);
         return this;
     }
 
@@ -78,7 +57,7 @@ public class Select implements Selector {
     public Selector orderBy(String field, String asc) {
         OrderBy o = OrderBy.orderby(field, asc);
         this.orderBys.add(o);
-        o.setSelector(this);
+        o.setOperator(this);
         return this;
     }
 
@@ -86,7 +65,7 @@ public class Select implements Selector {
     public Selector orderBy(String field) {
         OrderBy o = OrderBy.orderby(field);
         this.orderBys.add(o);
-        o.setSelector(this);
+        o.setOperator(this);
         return this;
     }
 
@@ -97,7 +76,7 @@ public class Select implements Selector {
 
         GroupBy g = GroupBy.groupBy(field);
         this.groupBy = g;
-        g.setSelector(this);
+        g.setOperator(this);
         return this;
     }
 
@@ -117,27 +96,6 @@ public class Select implements Selector {
         return this;
     }
 
-
-    private Object invokeGetByReflection(Object obj, String wantedField) {
-        Method getter = methodInvocationCache.get(obj.getClass(), wantedField, GET);
-        try {
-            return getter.invoke(obj);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new DmlBadSyntaxException(e.getMessage());//should never happen
-        }
-    }
-
-    private void initExecuteContext() {
-        this.context = tableInfoMap.lookup(table).orElseThrow(() -> new DmlBadSyntaxException("Error: Selecting a " +
-            "non-existing table:" + table));
-        this.methodInvocationCache = tab2MethodInvocationCacheMap.lookup(table);
-
-        //it is safe because records must be List according to JavaBean definition
-        Object tupleField = invokeGetByReflection(context.getTabledata(), TUPLE_FIELD);
-        assert (tupleField instanceof List<?>);
-        //noinspection unchecked
-        this.records = (List<Object>) tupleField;
-    }
 
     /**
      * rwlock table when internalExecute
@@ -182,7 +140,7 @@ public class Select implements Selector {
         List<List<Object>> selectedResult = new ArrayList<>();
         for (Object obj : internalExecute()) {
             selectedResult.add(selectedFields.stream().map(field ->
-                invokeGetByReflection(obj, field)).collect(Collectors.toList()));
+                    invokeGetByReflection(obj, field)).collect(Collectors.toList()));
         }
         return selectedResult;
     }

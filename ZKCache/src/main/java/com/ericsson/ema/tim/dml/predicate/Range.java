@@ -31,7 +31,7 @@ public class Range extends AbstractPredicate implements Predicate {
     @Override
     public boolean eval(Object tuple) {
         Object fieldVal = getFiledValFromTupleByName(tuple);
-        Map<String, String> metadata = getSelector().getContext().getTableMetadata();
+        Map<String, String> metadata = getOperator().getContext().getTableMetadata();
         String fieldType = metadata.get(field);
         if (fieldType == null)
             throw new DmlNoSuchFieldException(field);

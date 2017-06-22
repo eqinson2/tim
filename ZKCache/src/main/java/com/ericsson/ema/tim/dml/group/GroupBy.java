@@ -1,9 +1,9 @@
 package com.ericsson.ema.tim.dml.group;
 
+import com.ericsson.ema.tim.dml.Clause;
 import com.ericsson.ema.tim.dml.DataTypes;
 import com.ericsson.ema.tim.exception.DmlBadSyntaxException;
 import com.ericsson.ema.tim.exception.DmlNoSuchFieldException;
-import com.ericsson.ema.tim.dml.SelectClause;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +13,7 @@ import java.util.function.Function;
 /**
  * Created by eqinson on 2017/4/23.
  */
-public class GroupBy extends SelectClause {
+public class GroupBy extends Clause {
     private final static Logger LOGGER = LoggerFactory.getLogger(GroupBy.class);
 
     private final String field;
@@ -31,7 +31,7 @@ public class GroupBy extends SelectClause {
     }
 
     public Function<Object, Object> grouping() {
-        Map<String, String> metadata = getSelector().getContext().getTableMetadata();
+        Map<String, String> metadata = getOperator().getContext().getTableMetadata();
         String fieldType = metadata.get(field);
         if (fieldType == null)
             throw new DmlNoSuchFieldException(field);

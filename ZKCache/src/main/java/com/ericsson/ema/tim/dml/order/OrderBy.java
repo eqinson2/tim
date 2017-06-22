@@ -1,7 +1,8 @@
 package com.ericsson.ema.tim.dml.order;
 
+import com.ericsson.ema.tim.dml.Clause;
 import com.ericsson.ema.tim.dml.DataTypes;
-import com.ericsson.ema.tim.dml.SelectClause;
+import com.ericsson.ema.tim.dml.Select;
 import com.ericsson.ema.tim.exception.DmlBadSyntaxException;
 import com.ericsson.ema.tim.exception.DmlNoSuchFieldException;
 import org.slf4j.Logger;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 /**
  * Created by eqinson on 2017/4/23.
  */
-public class OrderBy extends SelectClause {
+public class OrderBy extends Clause {
     private final static Logger LOGGER = LoggerFactory.getLogger(OrderBy.class);
 
     private final String field;
@@ -42,11 +43,11 @@ public class OrderBy extends SelectClause {
     }
 
     public Comparator<Object> comparing() {
-        if (!getSelector().getSelectedFields().isEmpty() && !getSelector().getSelectedFields().contains(field))
+        if (!((Select) getOperator()).getSelectedFields().isEmpty() && !((Select) getOperator()).getSelectedFields().contains(field))
             throw new DmlBadSyntaxException(String.format("Error: order by parameter %s not in selected field %s",
-                field, getSelector().getSelectedFields().stream().collect(Collectors.joining(",", "{", "}"))));
+                    field, ((Select) getOperator()).getSelectedFields().stream().collect(Collectors.joining(",", "{", "}"))));
 
-        Map<String, String> metadata = getSelector().getContext().getTableMetadata();
+        Map<String, String> metadata = getOperator().getContext().getTableMetadata();
         String fieldType = metadata.get(field);
         if (fieldType == null)
             throw new DmlNoSuchFieldException(field);

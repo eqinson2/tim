@@ -7,8 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Like extends AbstractPredicate implements Predicate {
     private final static Logger LOGGER = LoggerFactory.getLogger(Eq.class);
@@ -27,7 +25,7 @@ public class Like extends AbstractPredicate implements Predicate {
             return false;
 
         Object fieldVal = getFiledValFromTupleByName(tuple);
-        Map<String, String> metadata = getSelector().getContext().getTableMetadata();
+        Map<String, String> metadata = getOperator().getContext().getTableMetadata();
         String fieldType = metadata.get(field);
         if (fieldType == null)
             throw new DmlNoSuchFieldException(field);

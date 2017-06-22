@@ -1,8 +1,8 @@
 package com.ericsson.ema.tim.dml.predicate;
 
-import com.ericsson.ema.tim.dml.SelectClause;
+import com.ericsson.ema.tim.dml.Clause;
 
-public abstract class AbstractPredicate extends SelectClause {
+public abstract class AbstractPredicate extends Clause {
     final String field;
     final Object valueToComp;
 

@@ -25,7 +25,7 @@ public class Eq extends AbstractPredicate implements Predicate {
             return false;
 
         Object fieldVal = getFiledValFromTupleByName(tuple);
-        Map<String, String> metadata = getSelector().getContext().getTableMetadata();
+        Map<String, String> metadata = getOperator().getContext().getTableMetadata();
         String fieldType = metadata.get(field);
         if (fieldType == null)
             throw new DmlNoSuchFieldException(field);
