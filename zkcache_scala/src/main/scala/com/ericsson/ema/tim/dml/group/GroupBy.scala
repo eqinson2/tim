@@ -13,7 +13,7 @@ class GroupBy(protected override val field: String) extends SelectClause {
 	private[this] type keyExtractorFuncType = Object => Object
 
 	def keyExtractor(): keyExtractorFuncType = {
-		selector.context.tableMetadata.get(field) match {
+		operator.context.tableMetadata.get(field) match {
 			case Some(DataTypes.String) | Some(DataTypes.Int) | Some(DataTypes.Boolean) =>
 				getFiledValFromTupleByName
 			case Some(other)                                                            =>

@@ -18,7 +18,6 @@ public class Delete extends AbstractChangeOperator implements Operator {
     private final static Logger LOGGER = LoggerFactory.getLogger(Delete.class);
 
     private final List<Eq> eqs = new ArrayList<>();
-    private List<String[]> deleteFields = new ArrayList<>();
 
     private Delete(String... fields) {
     }

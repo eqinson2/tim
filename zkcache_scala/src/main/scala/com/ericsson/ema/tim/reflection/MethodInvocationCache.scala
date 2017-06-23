@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 
 import com.ericsson.ema.tim.exception.DmlNoSuchFieldException
+import com.ericsson.ema.tim.reflection.AccessType.AccessType
 
 /**
   * Created by eqinson on 2017/5/5.
@@ -20,9 +21,11 @@ class MethodInvocationCache {
 		setterStore.clear()
 	}
 
-	private[this] def lookup(clz: Class[_], property: String): Method = {
+	private[this] def lookup(clz: Class[_], property: String, accessType: AccessType): Method = {
 		val beanInfo = Introspector.getBeanInfo(clz)
-		beanInfo.getPropertyDescriptors.toList.filter(property == _.getName).map(_.getReadMethod) match {
+		beanInfo.getPropertyDescriptors.toList.filter(property == _.getName).map(
+			p => if (accessType eq AccessType.GET) p.getReadMethod else p.getWriteMethod)
+		match {
 			case h :: _ => h
 			case _      => throw DmlNoSuchFieldException(property)
 		}
@@ -39,7 +42,7 @@ class MethodInvocationCache {
 					Option(store.get(key)) match {
 						case Some(cached) => cached
 						case None         =>
-							val cached = lookup(clz, field)
+							val cached = lookup(clz, field, accessType)
 							store.put(key, cached)
 							cached
 					}

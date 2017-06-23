@@ -16,6 +16,7 @@ object PojoGenUtil {
 	def generatePojo(className: String, properties: mutable.Map[String, Class[_]]): Class[_] = {
 		val cc = makeClass(className)
 		cc.addInterface(resolveCtClass(classOf[Serializable]))
+		cc.addInterface(resolveCtClass(classOf[Cloneable]))
 		properties.foreach(kv => {
 			try {
 				val field = new CtField(resolveCtClass(kv._2), kv._1, cc)
@@ -30,6 +31,7 @@ object PojoGenUtil {
 			}
 		})
 		cc.addMethod(generateToString(cc))
+		cc.addMethod(generateClone(cc, className))
 		cc.toClass(new Loader)
 	}
 
@@ -81,7 +83,14 @@ object PojoGenUtil {
 		CtMethod.make(sb, declaringClass)
 	}
 
-	private[this] def resolveCtClass(clazz: Class[_]): CtClass = {
+	private def generateClone(declaringClass: CtClass, className: String) = {
+		val cloneBody = String.format("return (%s) super.clone();", className)
+		val sb = String.format("public %s clone() { %s }", className, cloneBody)
+		LOGGER.debug("generateToString:{}", sb)
+		CtMethod.make(sb, declaringClass)
+	}
+
+	private[this] def resolveCtClass(clazz: Class[_]) = {
 		ClassPool.getDefault.get(clazz.getName)
 	}
 

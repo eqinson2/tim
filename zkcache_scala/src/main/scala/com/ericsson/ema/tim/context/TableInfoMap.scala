@@ -1,5 +1,7 @@
 package com.ericsson.ema.tim.context
 
+import scala.collection.mutable
+
 /**
   * Created by eqinson on 2017/5/5.
   */
@@ -16,7 +18,7 @@ class TableInfoMap {
 
 	def lookup(tableName: String): Option[TableInfoContext] = registry.get(tableName)
 
-	def registerOrReplace(tablename: String, tableMetadata: Map[String, String], tableData: Object): Unit = {
+	def registerOrReplace(tablename: String, tableMetadata: mutable.Map[String, String], tableData: Object): Unit = {
 		registry += (tablename -> TableInfoContext(tableData, tableMetadata))
 	}
 }
@@ -27,4 +29,4 @@ object TableInfoMap {
 	def apply(): TableInfoMap = instance
 }
 
-case class TableInfoContext(tabledata: Object, tableMetadata: Map[String, String])
+case class TableInfoContext(tabledata: Object, tableMetadata: mutable.Map[String, String])

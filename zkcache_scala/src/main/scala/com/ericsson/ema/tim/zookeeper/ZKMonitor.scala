@@ -103,7 +103,7 @@ class ZKMonitor(zkConnectionManager: ZKConnectionManager) {
 		try {
 			if (needToInvalidateInvocationCache)
 				Tab2MethodInvocationCacheMap().unRegister(tableName)
-			TableInfoMap().registerOrReplace(tableName, jloader.tableMetadata.toMap, obj)
+			TableInfoMap().registerOrReplace(tableName, jloader.tableMetadata, obj)
 		} finally {
 			zkCacheRWLock.writeUnLockTable(tableName)
 		}

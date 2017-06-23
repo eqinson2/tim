@@ -27,7 +27,7 @@ trait PredicateClause extends SelectClause {
 			return false
 
 		val fieldVal = getFiledValFromTupleByName(tuple)
-		val fieldType = selector.context.tableMetadata.get(field)
+		val fieldType = operator.context.tableMetadata.get(field)
 		fieldType match {
 			case Some(DataTypes.String)  => StringMatcher(fieldVal, valueToComp)
 			case Some(DataTypes.Int)     => IntMatcher(fieldVal, valueToComp)

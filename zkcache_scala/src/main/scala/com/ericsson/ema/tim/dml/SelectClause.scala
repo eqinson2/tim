@@ -9,12 +9,12 @@ import com.ericsson.ema.tim.reflection.AccessType
   * Created by eqinson on 2017/5/12.
   */
 trait SelectClause {
-	private[tim] var selector: Select = _
+	private[tim] var operator: Operator = _
 
 	protected val field: String
 
 	protected def getFiledValFromTupleByName(tuple: Object): Object = {
-		val getter = selector.methodInvocationCache.get(tuple.getClass, field, AccessType.GET)
+		val getter = operator.methodInvocationCache.get(tuple.getClass, field, AccessType.GET)
 		try
 			getter.invoke(tuple)
 		catch {

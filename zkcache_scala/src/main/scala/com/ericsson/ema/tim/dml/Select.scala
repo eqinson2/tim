@@ -1,20 +1,16 @@
 package com.ericsson.ema.tim.dml
 
 
-import java.lang.reflect.InvocationTargetException
-
-import com.ericsson.ema.tim.context.{Tab2MethodInvocationCacheMap, TableInfoContext, TableInfoMap}
 import com.ericsson.ema.tim.dml.group.GroupBy
 import com.ericsson.ema.tim.dml.order.{ChainableOrderings, OrderBy}
 import com.ericsson.ema.tim.dml.predicate.PredicateClause
 import com.ericsson.ema.tim.exception.DmlBadSyntaxException
 import com.ericsson.ema.tim.lock.ZKCacheRWLockMap.zkCacheRWLock
-import com.ericsson.ema.tim.reflection.{AccessType, MethodInvocationCache}
 
 /**
   * Created by eqinson on 2017/5/12.
   */
-class Select private() extends Selector with ChainableOrderings {
+class Select private() extends Operator with Selector with ChainableOrderings {
 	private[this] val TUPLE_FIELD: String = "records"
 
 	private[this] var selectedFields: List[String] = List[String]()
@@ -23,11 +19,6 @@ class Select private() extends Selector with ChainableOrderings {
 	private[this] var groupBy: GroupBy = _
 	private[this] var limit = Integer.MIN_VALUE
 	private[this] var skip = Integer.MIN_VALUE
-	private[this] var table: String = _
-	private[this] var records: List[Object] = _
-
-	var context: TableInfoContext = _
-	var methodInvocationCache: MethodInvocationCache = _
 
 	def this(fields: String*) {
 		this()
@@ -41,7 +32,7 @@ class Select private() extends Selector with ChainableOrderings {
 
 	override def where(predicate: PredicateClause): Selector = {
 		this.predicates :+= predicate
-		predicate.asInstanceOf[SelectClause].selector = this
+		predicate.asInstanceOf[SelectClause].operator = this
 		this
 	}
 
@@ -96,25 +87,6 @@ class Select private() extends Selector with ChainableOrderings {
 		result
 	}
 
-	private[this] def initExecuteContext(): Unit = {
-		this.context = TableInfoMap().lookup(table).getOrElse(throw DmlBadSyntaxException("Error: Selecting a " + "non-existing table:" + table))
-		this.methodInvocationCache = Tab2MethodInvocationCacheMap().lookup(table)
-		//it is safe because records must be List according to JavaBean definition
-		val tupleField = invokeGetByReflection(context.tabledata, TUPLE_FIELD)
-		import scala.collection.JavaConversions._
-		this.records = tupleField.asInstanceOf[java.util.List[Object]].toList
-	}
-
-	private[this] def invokeGetByReflection(obj: Object, wantedField: String): Object = {
-		val getter = methodInvocationCache.get(obj.getClass, wantedField, AccessType.GET)
-		try
-			getter.invoke(obj)
-		catch {
-			case e@(_: IllegalAccessException | _: InvocationTargetException) =>
-				throw DmlBadSyntaxException(e.getMessage) //should never happen
-		}
-	}
-
 	private[this] def internalPredicate(): Object => Boolean = {
 		r => predicates.map(_.eval(r)).reduce(_ && _)
 	}
@@ -148,7 +120,7 @@ class Select private() extends Selector with ChainableOrderings {
 	override def orderBy(field: String, asc: String = "asc"): Selector = {
 		val o = OrderBy(field, asc)
 		this.orderBys :+= o
-		o.selector = this
+		o.operator = this
 		this
 	}
 
@@ -157,7 +129,7 @@ class Select private() extends Selector with ChainableOrderings {
 			case None    =>
 				val g = new GroupBy(field)
 				this.groupBy = g
-				g.selector = this
+				g.operator = this
 				this
 			case Some(_) => throw DmlBadSyntaxException("Error: only support one groupBy Clause")
 		}
@@ -174,6 +146,8 @@ class Select private() extends Selector with ChainableOrderings {
 			zkCacheRWLock.readUnLockTable(table)
 		}
 	}
+
+
 }
 
 object Select {

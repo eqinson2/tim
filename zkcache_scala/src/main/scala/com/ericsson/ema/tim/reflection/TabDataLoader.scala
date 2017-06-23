@@ -41,21 +41,37 @@ case class TabDataLoader(private val classToLoad: String, private val jloader: J
 		val records = getter.invoke(obj).asInstanceOf[java.util.List[Object]]
 		jloader.tupleList.foreach(row => {
 			val tuple = tupleListType.newInstance.asInstanceOf[Object]
-			row.foreach(field => fillInField(tuple, field, realFieldVal(field)))
+			row.foreach(field => TabDataLoaderUtil.fillInField(tuple, field.fieldName, realFieldVal(field)))
 			records.add(tuple)
 		})
 		obj.asInstanceOf[Object]
 	}
 
-	private[this] def fillInField(tuple: Object, field: FieldInfo, value: Object): Unit = {
+
+	private[this] def loadTupleClz(instance: Any): Class[_] = {
+		val tupleClassName = instance.getClass.getName + "Data"
+		//must use same classloader as PojoGen
+		LOGGER.info("=====================load class: {}=====================", tupleClassName)
+		instance.getClass.getClassLoader.loadClass(tupleClassName)
+	}
+}
+
+object TabDataLoaderUtil {
+	private[this] val LOGGER = LoggerFactory.getLogger(TabDataLoaderUtil.getClass)
+
+	def fillInField(tuple: Object, field: String, value: Object): Unit = {
 		val beanInfo = Introspector.getBeanInfo(tuple.getClass)
 		val propertyDescriptors = beanInfo.getPropertyDescriptors
-		propertyDescriptors.toList.filter(field.fieldName == _.getName) match {
+		propertyDescriptors.toList.filter(field == _.getName) match {
 			case h :: _ =>
 				val setter = h.getWriteMethod
+				if (setter eq null) {
+					println(tuple)
+					println(value)
+				}
 				try {
 					setter.invoke(tuple, value)
-					LOGGER.debug("fillInField : {} = {}", field.fieldName, value: Any)
+					LOGGER.debug("fillInField : {} = {}", field, value: Any)
 				} catch {
 					case e@(_: IllegalAccessException | _: InvocationTargetException) =>
 						e.printStackTrace()
@@ -65,13 +81,6 @@ case class TabDataLoader(private val classToLoad: String, private val jloader: J
 				LOGGER.error("should not happen.")
 				throw new RuntimeException("bug in fillInField...")
 		}
-	}
-
-	private[this] def loadTupleClz(instance: Any): Class[_] = {
-		val tupleClassName = instance.getClass.getName + "Data"
-		//must use same classloader as PojoGen
-		LOGGER.info("=====================load class: {}=====================", tupleClassName)
-		instance.getClass.getClassLoader.loadClass(tupleClassName)
 	}
 }
 

@@ -5,7 +5,7 @@ import com.ericsson.ema.tim.exception.DmlBadSyntaxException
 /**
   * Created by eqinson on 2017/5/20.
   */
-class Eq private(protected override val field: String, protected override val valueToComp: Object) extends PredicateClause {
+class Eq private(override val field: String, protected override val valueToComp: Object) extends PredicateClause {
 	protected override val StringMatcher: matcherFuncType = _ == _
 	protected override val IntMatcher: matcherFuncType = (l, r) => l.asInstanceOf[Integer] == Integer.valueOf(r.asInstanceOf[String])
 	protected override val BoolMatcher: matcherFuncType = (l, r) => l.asInstanceOf[java.lang.Boolean] == java.lang.Boolean.valueOf(r.asInstanceOf[String])

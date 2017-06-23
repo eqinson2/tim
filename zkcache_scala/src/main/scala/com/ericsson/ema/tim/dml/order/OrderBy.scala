@@ -11,7 +11,7 @@ class OrderBy private(protected override val field: String, reversed: Boolean) e
 	private[this] val LOGGER = LoggerFactory.getLogger(classOf[OrderBy])
 
 	def ordering(): Ordering[Object] = {
-		selector.context.tableMetadata.get(field) match {
+		operator.context.tableMetadata.get(field) match {
 			case Some(DataTypes.String) if !reversed =>
 				new Ordering[Object] {
 					def compare(o1: Object, o2: Object): Int = {
