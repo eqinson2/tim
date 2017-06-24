@@ -6,7 +6,7 @@
         "name": "string"
       },
       {
-        "age": "int"
+        "age": "string"
       },
       {
         "job": "string"

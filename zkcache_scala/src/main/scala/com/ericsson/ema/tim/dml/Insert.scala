@@ -4,6 +4,7 @@ package com.ericsson.ema.tim.dml
 import com.ericsson.ema.tim.context.Tab2ClzMap
 import com.ericsson.ema.tim.dml.predicate.Eq
 import com.ericsson.ema.tim.exception.DmlBadSyntaxException
+import com.ericsson.ema.tim.lock.ZKCacheRWLockMap.zkCacheRWLock
 import com.ericsson.ema.tim.pojo.PojoGenerator
 import com.ericsson.ema.tim.reflection.TabDataLoaderUtil
 import org.slf4j.LoggerFactory
@@ -54,7 +55,14 @@ class Insert private() extends ChangeOperator {
 		val isEmpty = addFields.foldLeft(Select().from(this.table))((c, f) => c.where(Eq(f._1, f._2))).collect().isEmpty
 
 		initExecuteContext()
-		this.records = cloneList(this.records)
+
+		zkCacheRWLock.writeLockTable(this.table)
+		try {
+			this.records = cloneList(this.records)
+		} finally {
+			zkCacheRWLock.writeUnLockTable(this.table)
+		}
+
 		if (isEmpty) {
 			if (!validateAddOperation())
 				throw DmlBadSyntaxException("Error: Not add all table fields")

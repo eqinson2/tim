@@ -2,6 +2,7 @@ package com.ericsson.ema.tim.dml
 
 import com.ericsson.ema.tim.dml.predicate.Eq
 import com.ericsson.ema.tim.exception.DmlBadSyntaxException
+import com.ericsson.ema.tim.lock.ZKCacheRWLockMap.zkCacheRWLock
 import org.slf4j.LoggerFactory
 
 /**
@@ -36,7 +37,12 @@ class Delete private() extends ChangeOperator {
 		if (!validateDeleteOperation()) { //ensure to delete on row each tme
 			throw DmlBadSyntaxException("Error: Not specify all table fields in delete!")
 		}
-		this.records = cloneList(this.records)
+		zkCacheRWLock.writeLockTable(this.table)
+		try {
+			this.records = cloneList(this.records)
+		} finally {
+			zkCacheRWLock.writeUnLockTable(this.table)
+		}
 		if (!isEmpty)
 			this.records = this.records.filterNot(r => eqs.forall(_ eval r))
 		else

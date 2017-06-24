@@ -2,13 +2,14 @@ package com.ericsson.ema.tim.reflection
 
 
 import java.beans.Introspector
-import java.lang.reflect.InvocationTargetException
 
 import com.ericsson.ema.tim.context.{Tab2ClzMap, Tab2MethodInvocationCacheMap}
 import com.ericsson.ema.tim.dml.DataTypes
-import com.ericsson.ema.tim.exception.DmlNoSuchFieldException
+import com.ericsson.ema.tim.exception.{DmlBadSyntaxException, DmlNoSuchFieldException}
 import com.ericsson.ema.tim.json.{FieldInfo, JsonLoader}
 import org.slf4j.LoggerFactory
+
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by eqinson on 2017/5/10.
@@ -64,18 +65,13 @@ object TabDataLoaderUtil {
 		val propertyDescriptors = beanInfo.getPropertyDescriptors
 		propertyDescriptors.toList.filter(field == _.getName) match {
 			case h :: _ =>
+				LOGGER.debug("fillInField : {} = {}", field, value: Any)
 				val setter = h.getWriteMethod
-				if (setter eq null) {
-					println(tuple)
-					println(value)
-				}
-				try {
-					setter.invoke(tuple, value)
-					LOGGER.debug("fillInField : {} = {}", field, value: Any)
-				} catch {
-					case e@(_: IllegalAccessException | _: InvocationTargetException) =>
-						e.printStackTrace()
-						LOGGER.error("error fillInField : {}", field)
+
+				Try(setter.invoke(tuple, value)) match {
+					case Success(_)  =>
+					case Failure(ex) => LOGGER.error("error fillInField : {}", field)
+						throw DmlBadSyntaxException(ex.getMessage)
 				}
 			case _      =>
 				LOGGER.error("should not happen.")

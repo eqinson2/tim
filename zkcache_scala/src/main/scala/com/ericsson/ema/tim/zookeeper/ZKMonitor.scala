@@ -1,6 +1,5 @@
 package com.ericsson.ema.tim.zookeeper
 
-import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.locks.ReentrantLock
 
 import com.ericsson.ema.tim.context.{MetaDataRegistry, Tab2ClzMap, Tab2MethodInvocationCacheMap, TableInfoMap}
@@ -16,6 +15,8 @@ import org.apache.zookeeper.ZooDefs.Ids.OPEN_ACL_UNSAFE
 import org.apache.zookeeper.{KeeperException, WatchedEvent, Watcher, ZooKeeper}
 import org.slf4j.LoggerFactory
 
+import scala.util.{Failure, Success, Try}
+
 /**
   * Created by eqinson on 2017/5/5.
   */
@@ -27,17 +28,12 @@ class ZKMonitor(zkConnectionManager: ZKConnectionManager) {
 	private[this] val lock = new ReentrantLock
 
 	def start(): Unit = {
-		try
-			zkRootPath = SystemPropertyUtil.getAndAssertProperty("com.ericsson.ema.tim.zkRootPath")
-		catch {
-			case e: IllegalArgumentException => zkRootPath = "/TIM_POC"
-		}
+		zkRootPath = Try(SystemPropertyUtil.getAndAssertProperty("com.ericsson.ema.tim.zkRootPath")).getOrElse("/TIM_POC")
 		zkConnectionManager.registerListener(new ZooKeeperConnectionStateListenerImpl)
-		try
-			ZooKeeperUtil.createRecursive(getConnection, zkRootPath, null, OPEN_ACL_UNSAFE, PERSISTENT)
-		catch {
-			case e@(_: KeeperException | _: InterruptedException) =>
-				LOGGER.error("Failed to start ZKMonitor, the exception is ", e)
+		Try(ZooKeeperUtil.createRecursive(getConnection, zkRootPath, null, OPEN_ACL_UNSAFE, PERSISTENT)) match {
+			case Success(_)  =>
+			case Failure(ex) => LOGGER.error("Failed to start ZKMonitor, the exception is ", ex.getMessage)
+				throw new RuntimeException(ex)
 		}
 		loadAllTable()
 	}
@@ -49,16 +45,15 @@ class ZKMonitor(zkConnectionManager: ZKConnectionManager) {
 
 	private[this] def loadAllTable(): Unit = {
 		unloadAllTable()
-		var children: List[String] = Nil
-		try {
+		val children: List[String] = Try {
 			nodeChildCache = new NodeChildCache(getConnection, zkRootPath, new NodeChildrenChangedListenerImpl)
 			import scala.collection.JavaConversions._
-			children = nodeChildCache.start.toList
-		} catch {
-			case e: KeeperException.ConnectionLossException       =>
-				LOGGER.warn("Failed to setup nodeChildCache due to missing zookeeper connection.", e)
-			case e@(_: KeeperException | _: InterruptedException) =>
-				LOGGER.warn("Failed to loadAllTable on path: [" + zkRootPath + "]", e)
+			nodeChildCache.start.toList
+		} match {
+			case Success(result) => result
+			case Failure(ex)     =>
+				LOGGER.warn("Failed to setup nodeChildCache due to ", ex.getMessage)
+				throw new RuntimeException(ex)
 		}
 		childrenAdded(children)
 	}
@@ -70,7 +65,7 @@ class ZKMonitor(zkConnectionManager: ZKConnectionManager) {
 		try {
 			val rawData = zkConnectionManager.getConnection.map(getDataZKNoException(_, zkRootPath + "/" + zkNodeName, new NodeWatcher(zkNodeName)))
 				.getOrElse(new Array[Byte](0))
-			if (rawData.length == 0) {
+			if (rawData.isEmpty) {
 				LOGGER.error("Failed to loadOneTable for node {}", zkNodeName)
 				return
 			}
@@ -115,7 +110,7 @@ class ZKMonitor(zkConnectionManager: ZKConnectionManager) {
 		jloader
 	}
 
-	private[this] def buildDataModelFromJson(jloader: JsonLoader) = {
+	private[this] def buildDataModelFromJson(jloader: JsonLoader): Table = {
 		LOGGER.info("=====================parse json=====================")
 		val tt = new TableTuple("records", jloader.tableName + "Data")
 		tt.tuples = jloader.tableMetadata.foldRight(List[NameType]())((kv, list) => NameType(kv._1, kv._2) :: list)
@@ -124,39 +119,31 @@ class ZKMonitor(zkConnectionManager: ZKConnectionManager) {
 		table
 	}
 
-	private[this] def loadDataByReflection(jloader: JsonLoader) = {
+	private[this] def loadDataByReflection(jloader: JsonLoader): Object = {
 		LOGGER.info("=====================load data by reflection=====================")
 		val classToLoad = PojoGenerator.pojoPkg + "." + jloader.tableName
-		try
-			TabDataLoader(classToLoad, jloader).loadData()
-		catch {
-			case e@(_: ClassNotFoundException | _: IllegalAccessException | _: InstantiationException | _: InvocationTargetException) =>
-				e.printStackTrace()
-				throw new RuntimeException(e.getMessage)
+		Try(TabDataLoader(classToLoad, jloader).loadData()) match {
+			case Success(result) => result
+			case Failure(ex)     => LOGGER.warn("Failed to loadDataByReflection: " + ex.getMessage)
+				throw new RuntimeException(ex.getMessage)
 		}
 	}
 
-	private[this] def isMetaDataDefined(jsonLoader: JsonLoader) = {
+	private[this] def isMetaDataDefined(jsonLoader: JsonLoader): Boolean = {
 		val defined = MetaDataRegistry().isRegistered(jsonLoader.tableName, jsonLoader.tableMetadata.toMap)
 		if (defined) LOGGER.info("Metadata already defined for {}, skip regenerating javabean...", jsonLoader.tableName)
 		else LOGGER.info("Metadata NOT defined for {}", jsonLoader.tableName)
 		defined
 	}
 
-	private[this] def updateMetaData(jsonLoader: JsonLoader) = {
+	private[this] def updateMetaData(jsonLoader: JsonLoader) =
 		MetaDataRegistry().registerMetaData(jsonLoader.tableName, jsonLoader.tableMetadata.toMap)
-	}
 
 	private[this] def getDataZKNoException(zooKeeper: ZooKeeper, zkTarget: String, watcher: Watcher) =
-		try
-			zooKeeper.getData(zkTarget, watcher, null)
-		catch {
-			case e@(_: KeeperException | _: InterruptedException) =>
-				LOGGER.warn("Failed to get data from " + zkTarget, e)
-				new Array[Byte](0)
-		}
+		Try(zooKeeper.getData(zkTarget, watcher, null)).getOrElse(new Array[Byte](0))
 
-	private[this] def getConnection = zkConnectionManager.getConnection.getOrElse(throw new KeeperException.ConnectionLossException)
+	private[this] def getConnection =
+		zkConnectionManager.getConnection.getOrElse(throw new KeeperException.ConnectionLossException)
 
 	private[this] def unloadAllTable() = {
 		LOGGER.info("=====================unregister all table=====================")

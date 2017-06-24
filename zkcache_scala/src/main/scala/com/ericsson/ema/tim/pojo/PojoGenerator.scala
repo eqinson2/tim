@@ -1,10 +1,9 @@
 package com.ericsson.ema.tim.pojo
 
-import javassist.{CannotCompileException, NotFoundException}
-
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by eqinson on 2017/5/8.
@@ -25,27 +24,29 @@ object PojoGenerator {
 			props.foreach(kv => LOGGER.debug("name: {}, type: {}", kv._1, kv._2: Any))
 
 		val classToGen = pojoPkg + "." + table.name + "Data"
-		try {
+
+		def genPojo(): Unit = {
 			val clz = PojoGenUtil.generatePojo(classToGen, props)
 			Thread.currentThread.setContextClassLoader(clz.getClassLoader)
 		}
-		catch {
-			case e@(_: NotFoundException | _: CannotCompileException) =>
-				LOGGER.error(e.getMessage)
-				throw new RuntimeException(e)
+
+		Try(genPojo()) match {
+			case Success(_)  =>
+			case Failure(ex) => LOGGER.error("PojoGenerator.generatePojo error: " + ex.getMessage)
+				throw new RuntimeException(ex)
 		}
 	}
 
 	def generateTableClz(table: Table): Unit = {
 		generateTupleClz(table)
+
 		val props = Map("records" -> classOf[java.util.List[_]])
 		val classTOGen: String = pojoPkg + "." + table.name
-		try
-			PojoGenUtil.generateListPojo(classTOGen, props)
-		catch {
-			case e@(_: NotFoundException | _: CannotCompileException) =>
-				LOGGER.error(e.getMessage)
-				throw new RuntimeException(e)
+
+		Try(PojoGenUtil.generateListPojo(classTOGen, props)) match {
+			case Success(_)  =>
+			case Failure(ex) => LOGGER.error("PojoGenerator.generateListPojo error: " + ex.getMessage)
+				throw new RuntimeException(ex)
 		}
 	}
 }

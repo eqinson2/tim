@@ -6,6 +6,7 @@ import javassist._
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by eqinson on 2017/5/8.
@@ -18,16 +19,16 @@ object PojoGenUtil {
 		cc.addInterface(resolveCtClass(classOf[Serializable]))
 		cc.addInterface(resolveCtClass(classOf[Cloneable]))
 		properties.foreach(kv => {
-			try {
+			Try {
 				val field = new CtField(resolveCtClass(kv._2), kv._1, cc)
 				field.setModifiers(Modifier.PRIVATE)
 				cc.addField(field)
 				cc.addMethod(generatePlainGetter(cc, kv._1, kv._2))
 				cc.addMethod(generateSetter(cc, kv._1, kv._2))
-			} catch {
-				case e@(_: NotFoundException | _: CannotCompileException) =>
-					LOGGER.error(e.getMessage)
-					throw new RuntimeException(e)
+			} match {
+				case Success(_)  =>
+				case Failure(ex) => LOGGER.error("PojoGenUtil.generatePojo error: " + ex.getMessage)
+					throw new RuntimeException(ex)
 			}
 		})
 		cc.addMethod(generateToString(cc))
@@ -39,15 +40,15 @@ object PojoGenUtil {
 		val cc = makeClass(className)
 		cc.addInterface(resolveCtClass(classOf[Serializable]))
 		properties.foreach(kv => {
-			try {
+			Try {
 				val field = new CtField(resolveCtClass(kv._2), kv._1, cc)
 				field.setModifiers(Modifier.PRIVATE)
 				cc.addField(field)
 				cc.addMethod(generateListGetter(cc, kv._1, kv._2))
-			} catch {
-				case e@(_: NotFoundException | _: CannotCompileException) =>
-					LOGGER.error(e.getMessage)
-					throw new RuntimeException(e)
+			} match {
+				case Success(_)  =>
+				case Failure(ex) => LOGGER.error("PojoGenUtil.generateListPojo error: " + ex.getMessage)
+					throw new RuntimeException(ex)
 			}
 		})
 

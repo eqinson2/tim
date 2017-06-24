@@ -2,6 +2,7 @@ package com.ericsson.ema.tim.dml
 
 import com.ericsson.ema.tim.dml.predicate.Eq
 import com.ericsson.ema.tim.exception.DmlBadSyntaxException
+import com.ericsson.ema.tim.lock.ZKCacheRWLockMap.zkCacheRWLock
 import org.slf4j.LoggerFactory
 
 /**
@@ -36,7 +37,12 @@ class Update extends ChangeOperator {
 		val isEmpty = eqs.foldLeft(Select().from(this.table))(_ where _).collect().isEmpty
 
 		initExecuteContext()
-		this.records = cloneList(this.records)
+		zkCacheRWLock.writeLockTable(this.table)
+		try {
+			this.records = cloneList(this.records)
+		} finally {
+			zkCacheRWLock.writeUnLockTable(this.table)
+		}
 
 		if (!isEmpty)
 			for (obj <- this.records if eqs.forall(_ eval obj); update <- updateFields)

@@ -4,6 +4,8 @@ import com.ericsson.util.SystemPropertyUtil
 import org.apache.zookeeper.KeeperException
 import org.slf4j.LoggerFactory
 
+import scala.util.{Failure, Success, Try}
+
 /**
   * Created by eqinson on 2017/6/23.
   */
@@ -17,33 +19,27 @@ object ZKPersistenceUtil {
 
 	private[this] def isConnected = getConnection.getState.isConnected
 
-	private[this] def exists(path: String): Boolean = {
-		try
-			getConnection.exists(path, false) != null
-		catch {
-			case e: Exception => LOGGER.error("{}", e)
-		}
-		false
-	}
+	private[this] def exists(path: String): Boolean = Try(getConnection.exists(path, false) != null).getOrElse(false)
 
 	private[this] def setNodeData(path: String, data: String) = {
 		if (isConnected)
-			try
-				getConnection.setData(path, data.getBytes, -1)
-			catch {
-				case e: Exception => LOGGER.error("{}", e)
+			Try(getConnection.setData(path, data.getBytes, -1)) match {
+				case Success(_)  =>
+				case Failure(ex) => LOGGER.error("Failed to setNodeData: " + ex.getMessage)
+					throw new RuntimeException(ex)
 			}
 	}
 
 	private def getNodeData(path: String) = {
 		if (isConnected)
-			try {
+			Try {
 				val byteData = getConnection.getData(path, true, null)
 				new String(byteData, "utf-8")
-			} catch {
-				case e: Exception => LOGGER.error("{}", e); null
+			} match {
+				case Success(result) => result
+				case Failure(ex)     => LOGGER.error("Failed to getNodeData: " + ex.getMessage); ""
 			}
-		else null
+		else ""
 	}
 
 	def persist(table: String, data: String): Unit = {
@@ -57,5 +53,4 @@ object ZKPersistenceUtil {
 		if (LOGGER.isDebugEnabled)
 			LOGGER.debug("{} data: {}", tabPath, getNodeData(tabPath): Any)
 	}
-
 }

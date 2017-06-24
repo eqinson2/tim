@@ -1,6 +1,5 @@
 package com.ericsson.ema.tim.zookeeper
 
-import java.io.IOException
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicLong
 
@@ -10,6 +9,8 @@ import com.ericsson.zookeeper.ZooKeeperUtil
 import org.apache.zookeeper.Watcher.Event
 import org.apache.zookeeper.{WatchedEvent, Watcher, ZooKeeper}
 import org.slf4j.LoggerFactory
+
+import scala.util.{Failure, Success, Try}
 
 /**
   * Created by eqinson on 2017/5/5.
@@ -32,11 +33,7 @@ class ZKConnectionManager {
 	private[this] var reconnectExecutor: ExecutorService = _
 	private[this] var reconnFuture: Future[_] = _
 
-	try
-		connectStr = SystemPropertyUtil.getAndAssertProperty("com.ericsson.ema.tim.zkconnstr")
-	catch {
-		case e: IllegalArgumentException => connectStr = "localhost:6181"
-	}
+	connectStr = Try(SystemPropertyUtil.getAndAssertProperty("com.ericsson.ema.tim.zkconnstr")).getOrElse("localhost:6181")
 
 	def init(): Unit = {
 		LOGGER.info("Start to init zookeeper connection manager.")
@@ -65,13 +62,13 @@ class ZKConnectionManager {
 	}
 
 	private[this] def connect(): Unit = {
-		try {
+		Try {
 			val watcher = new ConnectionWatcher
 			zooKeeper = new ZooKeeper(connectStr, SESSION_TIMEOUT, watcher)
 			watcher.waitUntilConnected()
-		} catch {
-			case e: IOException =>
-				LOGGER.warn("Failed to create zookeeper connection.", e)
+		} match {
+			case Success(_)  =>
+			case Failure(ex) => LOGGER.warn("Failed to create zookeeper connection: " + ex.getMessage)
 				zooKeeper = null
 		}
 	}

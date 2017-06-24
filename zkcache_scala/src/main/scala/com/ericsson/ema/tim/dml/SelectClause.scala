@@ -1,9 +1,9 @@
 package com.ericsson.ema.tim.dml
 
-import java.lang.reflect.InvocationTargetException
-
 import com.ericsson.ema.tim.exception.DmlBadSyntaxException
 import com.ericsson.ema.tim.reflection.AccessType
+
+import scala.util.Try
 
 /**
   * Created by eqinson on 2017/5/12.
@@ -15,12 +15,6 @@ trait SelectClause {
 
 	protected def getFiledValFromTupleByName(tuple: Object): Object = {
 		val getter = operator.methodInvocationCache.get(tuple.getClass, field, AccessType.GET)
-		try
-			getter.invoke(tuple)
-		catch {
-			case e@(_: IllegalAccessException | _: InvocationTargetException) =>
-				throw DmlBadSyntaxException(e.getMessage) //should never happen
-
-		}
+		Try(getter.invoke(tuple)).getOrElse(throw DmlBadSyntaxException("getFiledValFromTupleByName error!"))
 	}
 }
